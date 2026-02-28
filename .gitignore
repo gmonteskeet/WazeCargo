@@ -3,6 +3,7 @@
 venv/
 .venv/
 env/
+.jupvenv/
 __pycache__/
 *.py[cod]
 *$py.class
