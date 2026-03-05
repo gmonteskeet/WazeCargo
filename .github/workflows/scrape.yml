@@ -2,7 +2,7 @@ name: Scrape Port Data
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # Every 15 minutes
+    - cron: '0 */4 * * *'  # Every 4 hours (00:00, 04:00, 08:00, etc.)
   workflow_dispatch:         # Manual trigger
 
 jobs:
