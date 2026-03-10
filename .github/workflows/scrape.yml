@@ -2,8 +2,8 @@ name: Scrape Port Data
 
 on:
   schedule:
-    - cron: '0 */4 * * *'  # Every 4 hours (00:00, 04:00, 08:00, etc.)
-  workflow_dispatch:         # Manual trigger
+    - cron: '0 */4 * * *'  # Every 4 hours
+  workflow_dispatch:
 
 jobs:
   scrape:
@@ -21,13 +21,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       
-      - name: Run scrapers
-        run: |
-          python scrapers/directemar_scraper.py
-          python scrapers/san_antonio_scraper.py
-          python scrapers/valparaiso_scraper.py
-          python scrapers/vesselfinder_scraper.py
+      - name: Run VesselFinder port scraper
+        run: python scrapers/ports/vesselfinder_ports.py
         continue-on-error: true
+      
+      # Add more scrapers as you build them:
+      # - name: Run DIRECTEMAR scraper
+      #   run: python scrapers/ports/directemar_ports.py
+      #   continue-on-error: true
       
       - name: Commit new data
         run: |
