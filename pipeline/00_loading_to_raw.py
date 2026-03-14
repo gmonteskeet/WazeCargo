@@ -32,7 +32,7 @@ from botocore.exceptions import ClientError
 
 BUCKET_NAME = "wazecargo-263704545424-eu-north-1-an"
 REGION = "eu-north-1"
-VALID_YEARS = list(range(2020, 2027))  # 2020 to 2026
+VALID_YEARS = list(range(2000, 2027))  # 2020 to 2026
 VALID_TYPES = ["ingresos", "salidas"]
 
 
