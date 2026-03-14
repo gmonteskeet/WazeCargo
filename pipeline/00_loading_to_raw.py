@@ -55,13 +55,19 @@ def join_path(base, *parts):
 
 def build_local_path(base_folder, file_type, year):
     """Build local file path for a given type and year."""
-    filename = f"{file_type}{year}.csv"
+    if file_type == "salidas":
+        filename = f"{file_type}_{year}.csv"  # salidas_2020.csv
+    else:
+        filename = f"{file_type}{year}.csv"   # ingresos2020.csv
     return join_path(base_folder, filename)
 
 
 def build_s3_key(file_type, year):
     """Build S3 key for a given type and year."""
-    filename = f"{file_type}{year}.csv"
+    if file_type == "salidas":
+        filename = f"{file_type}_{year}.csv"  # salidas_2020.csv
+    else:
+        filename = f"{file_type}{year}.csv"   # ingresos2020.csv
     return f"raw/{file_type}/year={year}/{filename}"
 
 
