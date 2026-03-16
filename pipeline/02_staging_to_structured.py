@@ -1,301 +1,236 @@
-"""
-WazeCargo Glue Job: Staging to PostgreSQL
-==========================================
-Loads Parquet files from S3 staging layer into PostgreSQL structured schema.
-
-Load Mode: Replace by year (DELETE + INSERT)
-- Deletes all rows for the year being loaded
-- Inserts new rows from staging
-- Safe to run multiple times
-
-Source: s3://wazecargo-263704545424-eu-north-1-an/staging/{tipo}/year={year}/
-Target: PostgreSQL structured.ingresos, structured.salidas
-"""
-
-import sys
 import json
 import boto3
+import psycopg2
 from awsglue.context import GlueContext
-from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import col
+from pyspark.sql.types import IntegerType
 
-# =============================================================================
-# CONFIGURATION
-# =============================================================================
+BUCKET       = "wazecargo-263704545424-eu-north-1-an"
+STAGING_BASE = "s3://wazecargo-263704545424-eu-north-1-an/staging/"
+SECRET_NAME  = "wazecargo/postgresql"
+REGION       = "eu-north-1"
+SCHEMA       = "structured"
 
-BUCKET = "wazecargo-263704545424-eu-north-1-an"
-STAGING_BASE = f"s3://{BUCKET}/staging"
-SECRET_NAME = "wazecargo/postgresql"
-REGION = "eu-north-1"
-SCHEMA = "structured"
+LOAD_MODE   = "full"
+TARGET_YEAR = "2026"
 
-# Tables to load
-TABLES = ["ingresos", "salidas"]
-
-# =============================================================================
-# INITIALIZE SPARK AND CLIENTS
-# =============================================================================
-
-sc = SparkContext()
+sc          = SparkContext()
 glueContext = GlueContext(sc)
-spark = glueContext.spark_session
+spark       = glueContext.spark_session
 
-s3 = boto3.client("s3", region_name=REGION)
-secrets = boto3.client("secretsmanager", region_name=REGION)
 
-# =============================================================================
-# GET DATABASE CREDENTIALS
-# =============================================================================
-
-def get_db_credentials():
-    """Retrieve PostgreSQL credentials from Secrets Manager."""
-    print(f"Retrieving credentials from secret: {SECRET_NAME}")
-    
-    response = secrets.get_secret_value(SecretId=SECRET_NAME)
-    secret = json.loads(response["SecretString"])
-    
+def get_credentials():
+    client = boto3.client("secretsmanager", region_name=REGION)
+    secret = client.get_secret_value(SecretId=SECRET_NAME)
+    data   = json.loads(secret["SecretString"])
     return {
-        "host": secret["host"],
-        "port": secret["port"],
-        "database": secret["database"],
-        "username": secret["username"],
-        "password": secret["password"]
+        "host":     data["host"],
+        "port":     int(data["port"]),
+        "database": data["database"],
+        "username": data["username"],
+        "password": data["password"]
     }
+
+
+def get_connection(creds):
+    return psycopg2.connect(
+        host=creds["host"],
+        port=creds["port"],
+        dbname=creds["database"],
+        user=creds["username"],
+        password=creds["password"],
+        sslmode="require"
+    )
 
 
 def get_jdbc_url(creds):
-    """Build JDBC URL for PostgreSQL."""
-    return f"jdbc:postgresql://{creds['host']}:{creds['port']}/{creds['database']}"
+    return (
+        "jdbc:postgresql://" + creds["host"] + ":" + str(creds["port"]) +
+        "/" + creds["database"] + "?sslmode=require"
+    )
 
 
 def get_jdbc_properties(creds):
-    """Build JDBC connection properties."""
     return {
-        "user": creds["username"],
+        "user":     creds["username"],
         "password": creds["password"],
-        "driver": "org.postgresql.Driver"
+        "driver":   "org.postgresql.Driver"
     }
 
-# =============================================================================
-# DATABASE OPERATIONS
-# =============================================================================
 
-def create_schema_if_not_exists(creds):
-    """Create the structured schema if it doesn't exist."""
-    import psycopg2
-    
-    conn = psycopg2.connect(
-        host=creds["host"],
-        port=creds["port"],
-        database=creds["database"],
-        user=creds["username"],
-        password=creds["password"]
-    )
+def setup_schema(creds):
+    conn = get_connection(creds)
     conn.autocommit = True
-    cursor = conn.cursor()
-    
-    cursor.execute(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA}")
-    print(f"Schema '{SCHEMA}' ensured")
-    
-    cursor.close()
+    cur  = conn.cursor()
+    cur.execute("CREATE SCHEMA IF NOT EXISTS " + SCHEMA)
+    print("Schema " + SCHEMA + " ready")
+    cur.close()
     conn.close()
 
 
-def delete_year_from_table(creds, table, year):
-    """Delete all rows for a specific year from a table."""
-    import psycopg2
-    
-    conn = psycopg2.connect(
-        host=creds["host"],
-        port=creds["port"],
-        database=creds["database"],
-        user=creds["username"],
-        password=creds["password"]
-    )
+def create_index(creds, table_name):
+    conn = get_connection(creds)
     conn.autocommit = True
-    cursor = conn.cursor()
-    
-    full_table = f"{SCHEMA}.{table}"
-    
-    # Check if table exists
-    cursor.execute(f"""
-        SELECT EXISTS (
-            SELECT FROM information_schema.tables 
-            WHERE table_schema = '{SCHEMA}' 
-            AND table_name = '{table}'
-        )
-    """)
-    table_exists = cursor.fetchone()[0]
-    
-    if table_exists:
-        cursor.execute(f"DELETE FROM {full_table} WHERE year = %s", (year,))
-        deleted = cursor.rowcount
-        print(f"Deleted {deleted} rows from {full_table} for year={year}")
-    else:
-        print(f"Table {full_table} does not exist yet - will be created on insert")
-    
-    cursor.close()
+    cur  = conn.cursor()
+    index_name = "idx_" + table_name + "_year"
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS " + index_name +
+        " ON " + SCHEMA + "." + table_name + "(year)"
+    )
+    print("Index created on " + SCHEMA + "." + table_name + ".year")
+    cur.close()
     conn.close()
 
 
-def create_index_if_not_exists(creds, table):
-    """Create index on year column for fast filtering."""
-    import psycopg2
-    
-    conn = psycopg2.connect(
-        host=creds["host"],
-        port=creds["port"],
-        database=creds["database"],
-        user=creds["username"],
-        password=creds["password"]
-    )
+def check_year_in_table(creds, table_name, year):
+    conn = get_connection(creds)
     conn.autocommit = True
-    cursor = conn.cursor()
-    
-    index_name = f"idx_{table}_year"
-    full_table = f"{SCHEMA}.{table}"
-    
-    cursor.execute(f"""
-        SELECT EXISTS (
-            SELECT FROM pg_indexes 
-            WHERE schemaname = '{SCHEMA}' 
-            AND indexname = '{index_name}'
-        )
-    """)
-    index_exists = cursor.fetchone()[0]
-    
-    if not index_exists:
-        cursor.execute(f"CREATE INDEX {index_name} ON {full_table}(year)")
-        print(f"Created index {index_name} on {full_table}")
-    
-    cursor.close()
+    cur  = conn.cursor()
+    cur.execute(
+        "SELECT COUNT(*) FROM " + SCHEMA + "." + table_name + " WHERE year = %s",
+        (int(year),)
+    )
+    count = cur.fetchone()[0]
+    print("Rows currently in " + SCHEMA + "." + table_name + " for year=" + year + ": " + str(count))
+    cur.close()
+    conn.close()
+    return count
+
+
+def get_years_in_table(creds, table_name):
+    conn = get_connection(creds)
+    conn.autocommit = True
+    cur  = conn.cursor()
+    cur.execute(
+        "SELECT year, COUNT(*) as row_count FROM " + SCHEMA + "." + table_name +
+        " GROUP BY year ORDER BY year"
+    )
+    rows = cur.fetchall()
+    print("Years currently in " + SCHEMA + "." + table_name + ":")
+    for row in rows:
+        print("  year=" + str(row[0]) + "  rows=" + str(row[1]))
+    cur.close()
     conn.close()
 
-# =============================================================================
-# LIST AVAILABLE YEARS IN STAGING
-# =============================================================================
 
-def get_staging_years(tipo):
-    """Get list of years available in staging for a given type."""
-    prefix = f"staging/{tipo}/"
-    
-    response = s3.list_objects_v2(Bucket=BUCKET, Prefix=prefix, Delimiter="/")
-    
-    years = []
-    if "CommonPrefixes" in response:
-        for cp in response["CommonPrefixes"]:
-            # Extract year from "staging/ingresos/year=2024/"
-            folder = cp["Prefix"]
-            if "year=" in folder:
-                year = folder.split("year=")[1].rstrip("/")
-                years.append(year)
-    
-    return sorted(years)
-
-# =============================================================================
-# LOAD DATA
-# =============================================================================
-
-def load_year(creds, tipo, year):
-    """Load a single year from staging to PostgreSQL."""
-    staging_path = f"{STAGING_BASE}/{tipo}/year={year}/"
-    full_table = f"{SCHEMA}.{tipo}"
-    
-    print(f"\n{'='*60}")
-    print(f"Loading: {tipo} year={year}")
-    print(f"Source: {staging_path}")
-    print(f"Target: {full_table}")
-    print("="*60)
-    
-    # Check if parquet files exist
-    response = s3.list_objects_v2(Bucket=BUCKET, Prefix=f"staging/{tipo}/year={year}/")
-    if "Contents" not in response:
-        print(f"No files found in staging for {tipo}/year={year} - skipping")
-        return 0
-    
-    parquet_files = [obj["Key"] for obj in response["Contents"] if obj["Key"].endswith(".parquet")]
-    if not parquet_files:
-        print(f"No parquet files found - skipping")
-        return 0
-    
-    # Read parquet from staging
-    df = spark.read.parquet(staging_path)
-    
-    row_count = df.count()
-    print(f"Rows to load: {row_count}")
-    
-    if row_count == 0:
-        print("No rows to load - skipping")
-        return 0
-    
-    # Delete existing data for this year
-    delete_year_from_table(creds, tipo, year)
-    
-    # Write to PostgreSQL
-    jdbc_url = get_jdbc_url(creds)
-    jdbc_props = get_jdbc_properties(creds)
-    
-    df.write.jdbc(
-        url=jdbc_url,
-        table=full_table,
-        mode="append",  # Append because we already deleted the year
-        properties=jdbc_props
+def delete_year_from_table(creds, table_name, year):
+    conn = get_connection(creds)
+    conn.autocommit = True
+    cur  = conn.cursor()
+    cur.execute(
+        "DELETE FROM " + SCHEMA + "." + table_name + " WHERE year = %s",
+        (int(year),)
     )
-    
-    print(f"Successfully loaded {row_count} rows to {full_table}")
-    
-    # Create index after first load
-    create_index_if_not_exists(creds, tipo)
-    
-    return row_count
+    deleted = cur.rowcount
+    print("Deleted " + str(deleted) + " rows for year=" + year + " from " + SCHEMA + "." + table_name)
+    cur.close()
+    conn.close()
+    return deleted
 
 
-def load_table(creds, tipo):
-    """Load all years for a table type."""
-    years = get_staging_years(tipo)
-    
-    if not years:
-        print(f"\nNo data found in staging for {tipo}")
+def full_load(tipo, table_name, creds):
+    path = STAGING_BASE + tipo + "/"
+    print("FULL LOAD - Reading all staging Parquet from: " + path)
+
+    df = spark.read.parquet(path)
+    print("Columns found: " + str(df.columns))
+
+    total = df.count()
+    print("Total rows for " + tipo + ": " + str(total))
+
+    if total == 0:
+        print("No rows found for " + tipo + " - skipping")
         return
-    
-    print(f"\nFound years in staging/{tipo}/: {years}")
-    
-    total_rows = 0
-    for year in years:
-        rows = load_year(creds, tipo, year)
-        total_rows += rows
-    
-    print(f"\nTotal rows loaded to {SCHEMA}.{tipo}: {total_rows}")
 
-# =============================================================================
-# MAIN
-# =============================================================================
+    df = df.withColumn("year", col("year").cast(IntegerType()))
 
-def main():
-    print("="*60)
-    print("WazeCargo Glue Job: Staging to PostgreSQL")
-    print("="*60)
-    print(f"Source: {STAGING_BASE}")
-    print(f"Target Schema: {SCHEMA}")
-    print(f"Tables: {TABLES}")
-    print(f"Mode: Replace by year (DELETE + INSERT)")
-    
-    # Get credentials
-    creds = get_db_credentials()
-    print(f"\nConnecting to: {creds['host']}")
-    
-    # Ensure schema exists
-    create_schema_if_not_exists(creds)
-    
-    # Load each table
-    for tipo in TABLES:
-        load_table(creds, tipo)
-    
-    print("\n" + "="*60)
-    print("WazeCargo Glue Job: Complete")
-    print("="*60)
+    jdbc_url   = get_jdbc_url(creds)
+    jdbc_props = get_jdbc_properties(creds)
+
+    print("Writing to " + SCHEMA + "." + table_name + "...")
+    df.repartition(2).write \
+        .format("jdbc") \
+        .option("url", jdbc_url) \
+        .option("dbtable", SCHEMA + "." + table_name) \
+        .option("batchsize", 10000) \
+        .mode("overwrite") \
+        .options(**jdbc_props) \
+        .save()
+
+    print("Full load done - " + str(total) + " rows written to " + SCHEMA + "." + table_name)
+    create_index(creds, table_name)
+    get_years_in_table(creds, table_name)
 
 
-if __name__ == "__main__":
-    main()
+def incremental_load(tipo, table_name, year, creds):
+    print("INCREMENTAL LOAD - year=" + year + " for " + tipo)
+
+    print("Before update:")
+    check_year_in_table(creds, table_name, year)
+
+    delete_year_from_table(creds, table_name, year)
+
+    path = STAGING_BASE + tipo + "/year=" + year + "/"
+    print("Reading staging Parquet from: " + path)
+
+    df = spark.read.parquet(path)
+    print("Columns found: " + str(df.columns))
+
+    total = df.count()
+    print("Total rows to insert for year=" + year + ": " + str(total))
+
+    if total == 0:
+        print("No rows found for year=" + year + " - skipping insert")
+        return
+
+    df = df.withColumn("year", col("year").cast(IntegerType()))
+
+    jdbc_url   = get_jdbc_url(creds)
+    jdbc_props = get_jdbc_properties(creds)
+
+    print("Inserting into " + SCHEMA + "." + table_name + "...")
+    df.repartition(2).write \
+        .format("jdbc") \
+        .option("url", jdbc_url) \
+        .option("dbtable", SCHEMA + "." + table_name) \
+        .option("batchsize", 10000) \
+        .mode("append") \
+        .options(**jdbc_props) \
+        .save()
+
+    print("Incremental load done - " + str(total) + " rows inserted for year=" + year)
+
+    print("After update:")
+    check_year_in_table(creds, table_name, year)
+    get_years_in_table(creds, table_name)
+
+
+print("WazeCargo staging to RDS job starting")
+print("Mode: " + LOAD_MODE)
+if LOAD_MODE == "incremental":
+    print("Target year: " + TARGET_YEAR)
+
+creds = get_credentials()
+print("Credentials retrieved from secret: " + SECRET_NAME)
+print("Connecting to: " + creds["host"] + "/" + creds["database"])
+
+setup_schema(creds)
+
+if LOAD_MODE == "full":
+    print("Running FULL LOAD for all years...")
+    full_load("ingresos", "all_imports", creds)
+    full_load("salidas", "all_exports", creds)
+
+elif LOAD_MODE == "incremental":
+    print("Running INCREMENTAL LOAD for year=" + TARGET_YEAR + "...")
+    incremental_load("ingresos", "all_imports", TARGET_YEAR, creds)
+    incremental_load("salidas", "all_exports", TARGET_YEAR, creds)
+
+else:
+    print("ERROR: LOAD_MODE must be full or incremental")
+
+print("WazeCargo staging to RDS job complete")
+print("Tables ready:")
+print("  " + SCHEMA + ".all_imports")
+print("  " + SCHEMA + ".all_exports")
