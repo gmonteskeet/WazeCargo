@@ -1,0 +1,901 @@
+{
+  "scrape_type": "port_status",
+  "scrape_timestamp": "2026-03-24T05:26:36.603589Z",
+  "ports_scraped": 2,
+  "data": [
+    {
+      "source": "vesselfinder",
+      "port_code": "CLSAI",
+      "port_name": "San Antonio",
+      "scrape_timestamp": "2026-03-24T05:26:35.033053Z",
+      "summary": {
+        "expected_ships": 10,
+        "ships_in_port": 18
+      },
+      "expected_vessels": [
+        {
+          "time": "Mar 24, 08:00",
+          "vessel_name": "REN JIAN 25",
+          "vessel_type": "Container Ship",
+          "imo": "9450935",
+          "flag": "China",
+          "built": 2015,
+          "gt": 36311,
+          "dwt": 63271,
+          "size": "200 x 32"
+        },
+        {
+          "time": "Mar 24, 19:00",
+          "vessel_name": "MSC SAMIA",
+          "vessel_type": "Container Ship",
+          "imo": "1016707",
+          "flag": "Liberia",
+          "built": 2015,
+          "gt": 36311,
+          "dwt": 63271,
+          "size": "200 x 32"
+        },
+        {
+          "time": "Mar 25, 03:00",
+          "vessel_name": "ONYX ARROW",
+          "vessel_type": "Vehicles Carrier",
+          "imo": "9267924",
+          "flag": "Bahamas",
+          "built": 2015,
+          "gt": 36311,
+          "dwt": 63271,
+          "size": "200 x 32"
+        },
+        {
+          "time": "Mar 25, 17:00",
+          "vessel_name": "POLAR CHILE",
+          "vessel_type": "Container Ship",
+          "imo": "9797187",
+          "flag": "Liberia",
+          "built": 2015,
+          "gt": 36311,
+          "dwt": 63271,
+          "size": "200 x 32"
+        },
+        {
+          "time": "Mar 25, 23:59",
+          "vessel_name": "HSL NIKE",
+          "vessel_type": "Container Ship",
+          "imo": "9301457",
+          "flag": "Liberia",
+          "built": 2015,
+          "gt": 36311,
+          "dwt": 63271,
+          "size": "200 x 32"
+        },
+        {
+          "time": "Mar 26, 13:00",
+          "vessel_name": "MSC VICTORIA",
+          "vessel_type": "Container Ship",
+          "imo": "9932907",
+          "flag": "Liberia",
+          "built": 2015,
+          "gt": 36311,
+          "dwt": 63271,
+          "size": "200 x 32"
+        },
+        {
+          "time": "Mar 28, 01:00",
+          "vessel_name": "CMA CGM VELA",
+          "vessel_type": "Container Ship",
+          "imo": "9354923",
+          "flag": "Malta",
+          "built": 2015,
+          "gt": 36311,
+          "dwt": 63271,
+          "size": "200 x 32"
+        },
+        {
+          "time": "Mar 28, 15:00",
+          "vessel_name": "GLOVIS COUGAR",
+          "vessel_type": "Vehicles Carrier",
+          "imo": "9451898",
+          "flag": "Korea",
+          "built": 2015,
+          "gt": 36311,
+          "dwt": 63271,
+          "size": "200 x 32"
+        },
+        {
+          "time": "Mar 28, 15:00",
+          "vessel_name": "FRIEDRICH SCHULTE",
+          "vessel_type": "Bulk Carrier",
+          "imo": "9841940",
+          "flag": "Singapore",
+          "built": 2015,
+          "gt": 36311,
+          "dwt": 63271,
+          "size": "200 x 32"
+        },
+        {
+          "time": "Mar 30, 18:00",
+          "vessel_name": "SPAR APUS",
+          "vessel_type": "Bulk Carrier",
+          "imo": "9734989",
+          "flag": "Norway",
+          "built": 2015,
+          "gt": 36311,
+          "dwt": 63271,
+          "size": "200 x 32"
+        }
+      ],
+      "vessels_in_port": [
+        {
+          "time": "Mar 24, 05:16",
+          "vessel_name": "MSC JULIETTE",
+          "vessel_type": "Container Ship",
+          "imo": "9946893",
+          "flag": "Liberia",
+          "built": 2010,
+          "gt": 13965,
+          "dwt": 21177,
+          "size": "169 x 25"
+        },
+        {
+          "time": "Mar 24, 05:20",
+          "vessel_name": "CMA CGM MEKONG",
+          "vessel_type": "Container Ship",
+          "imo": "9718105",
+          "flag": "Malta",
+          "built": 2010,
+          "gt": 13965,
+          "dwt": 21177,
+          "size": "169 x 25"
+        },
+        {
+          "time": "Mar 24, 05:19",
+          "vessel_name": "COSCO MALAYSIA",
+          "vessel_type": "Container Ship",
+          "imo": "9448774",
+          "flag": "Singapore",
+          "built": 2010,
+          "gt": 13965,
+          "dwt": 21177,
+          "size": "169 x 25"
+        },
+        {
+          "time": "Mar 24, 05:23",
+          "vessel_name": "GLOVIS SILVER",
+          "vessel_type": "Vehicles Carrier",
+          "imo": "9775828",
+          "flag": "Korea",
+          "built": 2010,
+          "gt": 13965,
+          "dwt": 21177,
+          "size": "169 x 25"
+        },
+        {
+          "time": "Mar 24, 05:24",
+          "vessel_name": "GLOBAL ACONCAGUA",
+          "vessel_type": "Vehicles Carrier",
+          "imo": "9996446",
+          "flag": "Marshall Islands",
+          "built": 2010,
+          "gt": 13965,
+          "dwt": 21177,
+          "size": "169 x 25"
+        },
+        {
+          "time": "Mar 24, 05:16",
+          "vessel_name": "ZALIV",
+          "vessel_type": "Bulk Carrier",
+          "imo": "9935806",
+          "flag": "Panama",
+          "built": 2010,
+          "gt": 13965,
+          "dwt": 21177,
+          "size": "169 x 25"
+        },
+        {
+          "time": "Mar 24, 05:21",
+          "vessel_name": "MYTIKAS",
+          "vessel_type": "Bulk Carrier",
+          "imo": "1015466",
+          "flag": "Bahamas",
+          "built": 2010,
+          "gt": 13965,
+          "dwt": 21177,
+          "size": "169 x 25"
+        },
+        {
+          "time": "Mar 24, 05:17",
+          "vessel_name": "MDS ATHENA",
+          "vessel_type": "Bulk Carrier",
+          "imo": "9450674",
+          "flag": "Marshall Islands",
+          "built": 2010,
+          "gt": 13965,
+          "dwt": 21177,
+          "size": "169 x 25"
+        },
+        {
+          "time": "Mar 24, 05:16",
+          "vessel_name": "MARITEC",
+          "vessel_type": "Bulk Carrier",
+          "imo": "9473391",
+          "flag": "Hong Kong",
+          "built": 2010,
+          "gt": 13965,
+          "dwt": 21177,
+          "size": "169 x 25"
+        },
+        {
+          "time": "Mar 24, 05:23",
+          "vessel_name": "KARVUNA",
+          "vessel_type": "Bulk Carrier",
+          "imo": "9468619",
+          "flag": "Malta",
+          "built": 2010,
+          "gt": 13965,
+          "dwt": 21177,
+          "size": "169 x 25"
+        }
+      ],
+      "recent_arrivals": [
+        {
+          "time": "Mar 23, 22:43",
+          "vessel_name": "AZAPA",
+          "vessel_type": "Tug",
+          "imo": "9892872",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 22:43",
+          "vessel_name": "TITAN",
+          "vessel_type": "Tug",
+          "imo": "1039993",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 16:16",
+          "vessel_name": "ZALIV",
+          "vessel_type": "Bulk Carrier",
+          "imo": "9935806",
+          "flag": "Panama",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 15:08",
+          "vessel_name": "TITAN",
+          "vessel_type": "Tug",
+          "imo": "1039993",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 15:08",
+          "vessel_name": "HAKONE GALAXY",
+          "vessel_type": "Chemical/Oil Products Tanker",
+          "imo": "9791171",
+          "flag": "Singapore",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 15:07",
+          "vessel_name": "AZAPA",
+          "vessel_type": "Tug",
+          "imo": "9892872",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 14:56",
+          "vessel_name": "TAYLOR ELQUI",
+          "vessel_type": "Pilot",
+          "imo": "725002161",
+          "flag": "Chile",
+          "size": "28 x 13",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198
+        },
+        {
+          "time": "Mar 23, 09:53",
+          "vessel_name": "LSG 1613 SAN ANTONIO",
+          "vessel_type": "Law enforcment",
+          "imo": "725001760",
+          "flag": "Chile",
+          "size": "28 x 13",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198
+        },
+        {
+          "time": "Mar 23, 08:34",
+          "vessel_name": "AZAPA",
+          "vessel_type": "Tug",
+          "imo": "9892872",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 08:32",
+          "vessel_name": "TITAN",
+          "vessel_type": "Tug",
+          "imo": "1039993",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        }
+      ],
+      "recent_departures": [
+        {
+          "time": "Mar 23, 22:37",
+          "vessel_name": "TITAN",
+          "vessel_type": "Tug",
+          "imo": "1039993",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 22:37",
+          "vessel_name": "HAKONE GALAXY",
+          "vessel_type": "Chemical/Oil Products Tanker",
+          "imo": "9791171",
+          "flag": "Singapore",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 22:35",
+          "vessel_name": "AZAPA",
+          "vessel_type": "Tug",
+          "imo": "9892872",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 14:25",
+          "vessel_name": "AZAPA",
+          "vessel_type": "Tug",
+          "imo": "9892872",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 14:17",
+          "vessel_name": "TAYLOR ELQUI",
+          "vessel_type": "Pilot",
+          "imo": "725002161",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 14:10",
+          "vessel_name": "TITAN",
+          "vessel_type": "Tug",
+          "imo": "1039993",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 08:06",
+          "vessel_name": "TRAVESIA I",
+          "vessel_type": "Fishing vessel",
+          "imo": "725000000",
+          "flag": "Chile",
+          "size": "28 x 13",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198
+        },
+        {
+          "time": "Mar 23, 08:04",
+          "vessel_name": "LP MESSIER",
+          "vessel_type": "Pilot",
+          "imo": "725001272",
+          "flag": "Chile",
+          "size": "28 x 13",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198
+        },
+        {
+          "time": "Mar 23, 07:59",
+          "vessel_name": "AZAPA",
+          "vessel_type": "Tug",
+          "imo": "9892872",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        },
+        {
+          "time": "Mar 23, 07:52",
+          "vessel_name": "TITAN",
+          "vessel_type": "Tug",
+          "imo": "1039993",
+          "flag": "Chile",
+          "built": 2025,
+          "gt": 433,
+          "dwt": 198,
+          "size": "28 x 13"
+        }
+      ]
+    },
+    {
+      "source": "vesselfinder",
+      "port_code": "CLVAP",
+      "port_name": "Valparaíso",
+      "scrape_timestamp": "2026-03-24T05:26:36.588613Z",
+      "summary": {
+        "expected_ships": 8,
+        "ships_in_port": 20
+      },
+      "expected_vessels": [
+        {
+          "time": "Mar 24, 09:00",
+          "vessel_name": "SANTOS EXPRESS",
+          "vessel_type": "Container Ship",
+          "imo": "9777632",
+          "flag": "Germany",
+          "built": 2016,
+          "gt": 24185,
+          "dwt": 35000,
+          "size": "180 x 30"
+        },
+        {
+          "time": "Mar 24, 13:30",
+          "vessel_name": "DON PANCHO II",
+          "vessel_type": "Oil Products Tanker",
+          "imo": "9287819",
+          "flag": "Chile",
+          "built": 2016,
+          "gt": 24185,
+          "dwt": 35000,
+          "size": "180 x 30"
+        },
+        {
+          "time": "Mar 24, 17:00",
+          "vessel_name": "BBC NEWCASTLE",
+          "vessel_type": "General Cargo Ship",
+          "imo": "9484209",
+          "flag": "Antigua & Barbuda",
+          "built": 2016,
+          "gt": 24185,
+          "dwt": 35000,
+          "size": "180 x 30"
+        },
+        {
+          "time": "Mar 24, 23:00",
+          "vessel_name": "MAERSK BULAN",
+          "vessel_type": "Container Ship",
+          "imo": "9355343",
+          "flag": "Singapore",
+          "built": 2016,
+          "gt": 24185,
+          "dwt": 35000,
+          "size": "180 x 30"
+        },
+        {
+          "time": "Mar 26, 06:00",
+          "vessel_name": "VIKING OCTANTIS",
+          "vessel_type": "Passenger (Cruise) Ship",
+          "imo": "9863194",
+          "flag": "Norway",
+          "built": 2016,
+          "gt": 24185,
+          "dwt": 35000,
+          "size": "180 x 30"
+        },
+        {
+          "time": "Mar 27, 09:00",
+          "vessel_name": "CS STRATOS",
+          "vessel_type": "Refrigerated Cargo Ship",
+          "imo": "9350991",
+          "flag": "Singapore",
+          "built": 2016,
+          "gt": 24185,
+          "dwt": 35000,
+          "size": "180 x 30"
+        },
+        {
+          "time": "Mar 28, 15:00",
+          "vessel_name": "ICE GRACE",
+          "vessel_type": "Refrigerated Cargo Ship",
+          "imo": "8706777",
+          "flag": "Bahamas",
+          "built": 2016,
+          "gt": 24185,
+          "dwt": 35000,
+          "size": "180 x 30"
+        },
+        {
+          "time": "Mar 30, 16:00",
+          "vessel_name": "MEREL D",
+          "vessel_type": "Bulk Carrier",
+          "imo": "9740433",
+          "flag": "Malta",
+          "built": 2016,
+          "gt": 24185,
+          "dwt": 35000,
+          "size": "180 x 30"
+        }
+      ],
+      "vessels_in_port": [
+        {
+          "time": "Mar 24, 05:17",
+          "vessel_name": "ZHEN XIANG 9",
+          "vessel_type": "Bulk Carrier",
+          "imo": "9541825",
+          "flag": "China",
+          "built": 1994,
+          "gt": 2561,
+          "dwt": 4672,
+          "size": "82 x 15"
+        },
+        {
+          "time": "Mar 24, 05:23",
+          "vessel_name": "HUAN HANG 17",
+          "vessel_type": "Bulk Carrier",
+          "imo": "9353694",
+          "flag": "Marshall Islands",
+          "built": 1994,
+          "gt": 2561,
+          "dwt": 4672,
+          "size": "82 x 15"
+        },
+        {
+          "time": "Mar 24, 05:23",
+          "vessel_name": "ALPACA",
+          "vessel_type": "Chemical/Oil Products Tanker",
+          "imo": "9403293",
+          "flag": "Chile",
+          "built": 1994,
+          "gt": 2561,
+          "dwt": 4672,
+          "size": "82 x 15"
+        },
+        {
+          "time": "Mar 24, 05:22",
+          "vessel_name": "KNUD",
+          "vessel_type": "Refrigerated Cargo Ship",
+          "imo": "8903167",
+          "flag": "Bahamas",
+          "built": 1994,
+          "gt": 2561,
+          "dwt": 4672,
+          "size": "82 x 15"
+        },
+        {
+          "time": "Mar 24, 05:23",
+          "vessel_name": "CS STANDARD",
+          "vessel_type": "Refrigerated Cargo Ship",
+          "imo": "9438509",
+          "flag": "Singapore",
+          "built": 1994,
+          "gt": 2561,
+          "dwt": 4672,
+          "size": "82 x 15"
+        },
+        {
+          "time": "Mar 24, 05:22",
+          "vessel_name": "CONDOR BILBAO",
+          "vessel_type": "General Cargo Ship",
+          "imo": "9473250",
+          "flag": "Cyprus",
+          "built": 1994,
+          "gt": 2561,
+          "dwt": 4672,
+          "size": "82 x 15"
+        },
+        {
+          "time": "Mar 24, 05:23",
+          "vessel_name": "DONA JOSEFINA",
+          "vessel_type": "Chemical/Oil Products Tanker",
+          "imo": "9547764",
+          "flag": "Chile",
+          "built": 1994,
+          "gt": 2561,
+          "dwt": 4672,
+          "size": "82 x 15"
+        },
+        {
+          "time": "Mar 24, 05:22",
+          "vessel_name": "UNIONSUR",
+          "vessel_type": "Fish Factory Ship",
+          "imo": "8708957",
+          "flag": "Chile",
+          "built": 1994,
+          "gt": 2561,
+          "dwt": 4672,
+          "size": "82 x 15"
+        },
+        {
+          "time": "Mar 24, 05:23",
+          "vessel_name": "BF UNZEN",
+          "vessel_type": "Fishing Vessel",
+          "imo": "8122684",
+          "flag": "Chile",
+          "built": 1994,
+          "gt": 2561,
+          "dwt": 4672,
+          "size": "82 x 15"
+        },
+        {
+          "time": "Mar 24, 05:22",
+          "vessel_name": "GACRUX",
+          "vessel_type": "General Cargo Ship",
+          "imo": "9100499",
+          "flag": "Chile",
+          "built": 1994,
+          "gt": 2561,
+          "dwt": 4672,
+          "size": "82 x 15"
+        }
+      ],
+      "recent_arrivals": [
+        {
+          "time": "Mar 23, 23:49",
+          "vessel_name": "ALPACA",
+          "vessel_type": "Chemical/Oil Products Tanker",
+          "imo": "9403293",
+          "flag": "Chile",
+          "built": 2022,
+          "gt": 499,
+          "dwt": 248,
+          "size": "29 x 12"
+        },
+        {
+          "time": "Mar 23, 21:55",
+          "vessel_name": "MATAQUITO II",
+          "vessel_type": "Tug",
+          "imo": "9931408",
+          "flag": "Chile",
+          "built": 2022,
+          "gt": 499,
+          "dwt": 248,
+          "size": "29 x 12"
+        },
+        {
+          "time": "Mar 23, 21:50",
+          "vessel_name": "PELICANO II",
+          "vessel_type": "Tug",
+          "imo": "9655860",
+          "flag": "Chile",
+          "built": 2022,
+          "gt": 499,
+          "dwt": 248,
+          "size": "29 x 12"
+        },
+        {
+          "time": "Mar 23, 20:49",
+          "vessel_name": "PELICANO II",
+          "vessel_type": "Tug",
+          "imo": "9655860",
+          "flag": "Chile",
+          "built": 2022,
+          "gt": 499,
+          "dwt": 248,
+          "size": "29 x 12"
+        },
+        {
+          "time": "Mar 23, 20:44",
+          "vessel_name": "MATAQUITO II",
+          "vessel_type": "Tug",
+          "imo": "9931408",
+          "flag": "Chile",
+          "built": 2022,
+          "gt": 499,
+          "dwt": 248,
+          "size": "29 x 12"
+        },
+        {
+          "time": "Mar 23, 18:46",
+          "vessel_name": "ENCO",
+          "vessel_type": "Tug",
+          "imo": "9528988",
+          "flag": "Chile",
+          "built": 2022,
+          "gt": 499,
+          "dwt": 248,
+          "size": "29 x 12"
+        },
+        {
+          "time": "Mar 23, 17:47",
+          "vessel_name": "CALAFATE",
+          "vessel_type": "Tug",
+          "imo": "9476056",
+          "flag": "Chile",
+          "built": 2022,
+          "gt": 499,
+          "size": "29 x 12",
+          "dwt": 248
+        },
+        {
+          "time": "Mar 23, 17:45",
+          "vessel_name": "ENCO",
+          "vessel_type": "Tug",
+          "imo": "9528988",
+          "flag": "Chile",
+          "built": 2022,
+          "gt": 499,
+          "dwt": 248,
+          "size": "29 x 12"
+        },
+        {
+          "time": "Mar 23, 15:42",
+          "vessel_name": "ESTRELLA",
+          "vessel_type": "Pilot",
+          "imo": "725001139",
+          "flag": "Chile",
+          "size": "29 x 12",
+          "built": 2022,
+          "gt": 499,
+          "dwt": 248
+        },
+        {
+          "time": "Mar 23, 14:23",
+          "vessel_name": "MATAQUITO II",
+          "vessel_type": "Tug",
+          "imo": "9931408",
+          "flag": "Chile",
+          "built": 2022,
+          "gt": 499,
+          "dwt": 248,
+          "size": "29 x 12"
+        }
+      ],
+      "recent_departures": [
+        {
+          "time": "Mar 23, 21:55",
+          "vessel_name": "MATAQUITO II",
+          "vessel_type": "Tug",
+          "imo": "9931408",
+          "flag": "Chile",
+          "built": 2010,
+          "gt": 375,
+          "dwt": 250,
+          "size": "32 x 11"
+        },
+        {
+          "time": "Mar 23, 21:49",
+          "vessel_name": "PELICANO II",
+          "vessel_type": "Tug",
+          "imo": "9655860",
+          "flag": "Chile",
+          "built": 2010,
+          "gt": 375,
+          "dwt": 250,
+          "size": "32 x 11"
+        },
+        {
+          "time": "Mar 23, 20:48",
+          "vessel_name": "PELICANO II",
+          "vessel_type": "Tug",
+          "imo": "9655860",
+          "flag": "Chile",
+          "built": 2010,
+          "gt": 375,
+          "dwt": 250,
+          "size": "32 x 11"
+        },
+        {
+          "time": "Mar 23, 20:43",
+          "vessel_name": "MATAQUITO II",
+          "vessel_type": "Tug",
+          "imo": "9931408",
+          "flag": "Chile",
+          "built": 2010,
+          "gt": 375,
+          "dwt": 250,
+          "size": "32 x 11"
+        },
+        {
+          "time": "Mar 23, 18:46",
+          "vessel_name": "ENCO",
+          "vessel_type": "Tug",
+          "imo": "9528988",
+          "flag": "Chile",
+          "built": 2010,
+          "gt": 375,
+          "dwt": 250,
+          "size": "32 x 11"
+        },
+        {
+          "time": "Mar 23, 18:44",
+          "vessel_name": "POLAR COLOMBIA",
+          "vessel_type": "Container Ship",
+          "imo": "9786762",
+          "flag": "Singapore",
+          "built": 2010,
+          "gt": 375,
+          "dwt": 250,
+          "size": "32 x 11"
+        },
+        {
+          "time": "Mar 23, 18:42",
+          "vessel_name": "CALAFATE",
+          "vessel_type": "Tug",
+          "imo": "9476056",
+          "flag": "Chile",
+          "built": 2010,
+          "gt": 375,
+          "size": "32 x 11",
+          "dwt": 250
+        },
+        {
+          "time": "Mar 23, 17:47",
+          "vessel_name": "ESTRELLA",
+          "vessel_type": "Pilot",
+          "imo": "725001139",
+          "flag": "Chile",
+          "size": "32 x 11",
+          "built": 2010,
+          "gt": 375,
+          "dwt": 250
+        },
+        {
+          "time": "Mar 23, 17:46",
+          "vessel_name": "CALAFATE",
+          "vessel_type": "Tug",
+          "imo": "9476056",
+          "flag": "Chile",
+          "built": 2010,
+          "gt": 375,
+          "size": "32 x 11",
+          "dwt": 250
+        },
+        {
+          "time": "Mar 23, 17:44",
+          "vessel_name": "ENCO",
+          "vessel_type": "Tug",
+          "imo": "9528988",
+          "flag": "Chile",
+          "built": 2010,
+          "gt": 375,
+          "dwt": 250,
+          "size": "32 x 11"
+        }
+      ]
+    }
+  ]
+}
