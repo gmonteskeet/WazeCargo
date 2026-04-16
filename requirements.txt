@@ -20,3 +20,9 @@ streamlit==1.28.0
 # Utilities
 python-dotenv==1.0.0
 schedule==1.2.0
+
+# Forecaster (port closure risk)
+pyyaml==6.0.1
+boto3==1.34.0
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.25

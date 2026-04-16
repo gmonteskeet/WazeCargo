@@ -26,10 +26,10 @@
     2023,
     2025
   ],
-  "n_port_direction": 78,
-  "n_ports": 45,
-  "n_rows_features": 21013,
-  "n_rows_agg": 22144,
+  "n_port_direction": 76,
+  "n_ports": 43,
+  "n_rows_features": 20916,
+  "n_rows_agg": 21966,
   "year_range": [
     2005,
     2025
