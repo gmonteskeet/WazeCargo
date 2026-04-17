@@ -68,7 +68,6 @@ SELECT
     i.mes::INTEGER                                                  AS month,
     i.puerto_desembarque                                            AS port,
     'import'::TEXT                                                  AS direction,
-    i.aduana,
     COUNT(*)::BIGINT                                                AS shipment_count,
     COALESCE(SUM(i.cif_us), 0)                                     AS total_value_usd,
     NULL::DOUBLE PRECISION                                          AS total_weight_mt,
@@ -89,7 +88,7 @@ SELECT
 FROM {S}.clean_maritime_imports i
 WHERE i.puerto_desembarque IS NOT NULL
   AND i.periodo BETWEEN 2005 AND 2025
-GROUP BY i.puerto_desembarque, i.periodo, i.mes, i.aduana
+GROUP BY i.puerto_desembarque, i.periodo, i.mes
 
 UNION ALL
 
@@ -99,7 +98,6 @@ SELECT
     e.mes::INTEGER,
     e.puerto_embarque                                               AS port,
     'export'::TEXT                                                  AS direction,
-    e.aduana,
     COUNT(*)::BIGINT,
     COALESCE(SUM(e.fob_us), 0),
     COALESCE(SUM(e.peso_bruto_kg) / 1000.0, 0)                    AS total_weight_mt,
@@ -120,7 +118,7 @@ SELECT
 FROM {S}.clean_maritime_exports e
 WHERE e.puerto_embarque IS NOT NULL
   AND e.periodo BETWEEN 2005 AND 2025
-GROUP BY e.puerto_embarque, e.periodo, e.mes, e.aduana;
+GROUP BY e.puerto_embarque, e.periodo, e.mes;
 
 CREATE INDEX ON {S}.port_monthly_agg (port, direction, year, month);
 """

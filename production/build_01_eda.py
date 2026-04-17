@@ -688,13 +688,13 @@ on clean years only**:
 |------|----------------------|-----------|-------------------|
 | 1    | 2005 – 2018          | 2019      | pre-COVID         |
 | 2    | 2005 – 2019          | 2023      | post-COVID, recent|
-| 3    | 2005 – 2023          | 2025      | most recent clean |
+| 3    | 2005 – 2023          | 2024      | recovery year     |
+| 4    | 2005 – 2024          | 2025      | most recent       |
 | Final| 2005 – 2025          | 2026 (12 steps) | production |
 
 * COVID years (2020–2022) are **never test targets** but they *are* in the
   training set — sample weights of 0.1 / 0.2 / 0.4 ensure they nudge but do
   not dominate the loss.
-* 2024 is **excluded entirely** (incomplete customs data).
 * Within each fold, the **last clean year of the training window** is held
   out as a *validation* set for early stopping.
 """))
@@ -703,7 +703,8 @@ cells.append(("code", r"""# ── Visualise the fold structure ─────�
 folds = [
     ("Fold 1", 2005, 2018, 2019),
     ("Fold 2", 2005, 2019, 2023),
-    ("Fold 3", 2005, 2023, 2025),
+    ("Fold 3", 2005, 2023, 2024),
+    ("Fold 4", 2005, 2024, 2025),
     ("Final",  2005, 2025, 2026),
 ]
 
@@ -722,11 +723,6 @@ for y in [2020, 2021, 2022]:
     ax.axvspan(y, y + 1, color="red", alpha=0.08)
 ax.text(2021, len(folds) + 0.05, "COVID years (down-weighted)",
         ha="center", fontsize=9, color="red")
-
-# 2024 hatch
-ax.axvspan(2024, 2025, color="grey", alpha=0.25)
-ax.text(2024.5, len(folds) + 0.4, "2024 excluded\n(incomplete)",
-        ha="center", fontsize=8, color="grey")
 
 ax.set_yticks(range(len(folds)))
 ax.set_yticklabels([f[0] for f in folds])
@@ -747,7 +743,7 @@ cells.append(("md", r"""## 11  EDA conclusions — handed off to the modelling n
    Calendar features carry non-linear value only.
 3. **Cleaning.** COVID-aware features (`lag_12_clean`, `yoy_growth_clean`,
    `is_covid_*` flags) are essential. Sample weights (0.1 / 0.2 / 0.4) for
-   COVID years; 2024 dropped entirely.
+   COVID years.
 4. **Multicollinearity.** `sc_norm` is the same as the target by
    construction; the feature-selection step removes any pair with $|\rho| > 0.95$
    before fitting linear/tree models.

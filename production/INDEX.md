@@ -2,7 +2,7 @@
 
 **Updated**: 2026-04-17
 **Data source**: AWS RDS PostgreSQL (`wazecargo-db`, database `waze_cargo`)
-**Winner model**: Baseline Seasonal Naive (COVID-aware) -- volume-weighted MAPE = 4.33%
+**Winner model**: LightGBM -- volume-weighted MAPE = 12.27% (with 2024 data from new clean tables)
 
 ---
 
@@ -60,7 +60,7 @@ production/
 | File | Description |
 |------|-------------|
 | `build_feature_cache.py` | Reads from RDS, builds `port_monthly_agg.parquet` and `port_features_indexed.parquet` in `data/`. Adds COVID-aware features. |
-| `wz_ml_utils.py` | Shared ML utilities: `FEATURE_COLS` (rolling means re-included after Bug-2 fix), `walk_forward_eval()` (3-fold CV), `score()`, `forecast_2026()` (12-step recursive), `summarise()` (volume-weighted). COVID weights: 2020=0.1, 2021=0.2, 2022=0.4, 2024=0.0. |
+| `wz_ml_utils.py` | Shared ML utilities: `FEATURE_COLS` (rolling means re-included after Bug-2 fix), `walk_forward_eval()` (4-fold CV), `score()`, `forecast_2026()` (12-step recursive), `summarise()` (volume-weighted). COVID weights: 2020=0.1, 2021=0.2, 2022=0.4. 2024 included at full weight. |
 | `_nb_builder.py` | Converts `(cell_type, source)` lists into `.ipynb` files. |
 
 ## Notebooks (in `notebooks/`)
@@ -78,31 +78,43 @@ Each model notebook includes walk-forward CV metrics + a **top-8 ports by volume
 | `build_07_prophet.py` | `07_prophet.ipynb` | **Prophet** (univariate). Component decomposition + top-8 forecast chart. |
 | `build_08_comparison.py` | `08_model_comparison_2026.ipynb` | **Model comparison**: ranking, stability, head-to-head. **Chile-wide imports/exports overview** with all 6 models overlaid + zoom panels. |
 | `build_09_bugs_found.py` | `09_bugs_found.ipynb` | Data leakage post-mortem (Bug-1: min-max, Bug-2: rolling means). |
+| `build_10_national_forecast.py` | `10_national_forecast_2026.ipynb` | **National forecast**: CV scores justifying Baseline for national totals, historical trade chart + 2026 forecast, persists `port_forecast_2026` and `chile_forecast_2026` to RDS. |
+| `build_11_hybrid_ensemble.py` | `11_hybrid_ensemble.ipynb` | **Hybrid ensemble**: Baseline for big ports (≥500/mo) + CV-selected ML for small ports. wMAPE 4.03%. Persists `port_forecast_2026_hybrid` and `port_model_selection` to RDS. |
 
 ---
 
-## Model Comparison Summary (2026-04-17)
+## Model Comparison Summary (2026-04-17, refreshed from new clean tables)
 
-**Winner**: Baseline Seasonal Naive (COVID-aware) -- wMAPE 4.33%, wR2 0.392
+**Winner**: LightGBM -- wMAPE 12.27%
 
-### 2026 Annual Forecast Summary -- Total Chile Shipments
+### CV Scores (volume-weighted, 4-fold walk-forward, 2024 included)
 
-| Model | Imports | Exports | Total |
-|-------|---------|---------|-------|
-| **Baseline** | **856,350** | **186,148** | **1,042,499** |
-| LightGBM | 744,916 | 183,383 | 928,299 |
-| XGBoost | 740,204 | 177,017 | 917,221 |
-| Random Forest | 805,354 | 178,314 | 983,668 |
-| Ridge | 828,789 | 184,849 | 1,013,639 |
-| Prophet | 783,781 | 175,596 | 959,377 |
-| *Actual 2025* | *814,110* | *181,800* | *995,910* |
+| Model | wMAPE% | wMAE | wRMSE | wR² |
+|-------|--------|------|-------|-----|
+| **LightGBM** | **12.27** | 2,534 | 2,990 | -0.466 |
+| ElasticNet | 12.63 | 2,056 | 2,459 | -0.664 |
+| XGBoost | 12.63 | 2,674 | 3,132 | -0.543 |
+| Random Forest | 12.69 | 2,367 | 2,927 | -0.359 |
+| Ridge | 12.86 | 2,024 | 2,456 | -0.810 |
+| Lasso | 14.73 | 2,348 | 2,788 | -0.966 |
+| Baseline | 14.84 | 2,255 | 2,883 | -2.043 |
+| Prophet | 21.33 | 3,840 | 4,441 | -2.476 |
+
+### 2026 National Forecast (winner model, all 62 port-direction pairs)
+
+| Direction | Total |
+|-----------|-------|
+| Imports | 856,350 |
+| Exports | 186,207 |
+| **Grand Total** | **1,042,557** |
 
 ### Key observations
 
-- **Baseline wins on wMAPE** because Chilean port traffic is highly seasonal and stable -- lag-12 with clean YoY growth captures the dominant signal.
-- **Tree models (LightGBM, XGBoost, RF)** slightly underperform on wMAPE but add value on volatile small ports.
-- **Feature engineering** (COVID-aware lags, sample weights) is more important than model choice.
-- **Rolling means re-included** as features after Bug-2 fix (past-only windows).
+- **LightGBM wins on wMAPE** (12.27%) over baseline (14.84%) — ML models now outperform seasonal naive with 2024 data included.
+- **Per-port winners vary**: ElasticNet (14 ports), XGBoost (12), Lasso (11), Ridge (8), LightGBM (6), Baseline (5), RF (5).
+- **Negative R² values** reflect volume-weighted aggregation across heterogeneous ports — individual high-volume ports show positive R² (e.g. Valparaíso import R²=0.59, SAN ANTONIO export R²=0.70).
+- **Feature engineering** (COVID-aware lags, sample weights, past-only rolling means) remains critical.
+- **2024 data included** at full weight (1.0) — only COVID years (2020-2022) are down-weighted.
 
 ---
 
@@ -120,6 +132,10 @@ Each model notebook includes walk-forward CV metrics + a **top-8 ports by volume
 | `commodity_port_params` | `04_ml_commodity.py` |
 | `commodity_seasonal_index` | `04_ml_commodity.py` |
 | `commodity_port_forecast` | `04_ml_commodity.py` |
+| `port_forecast_2026` | `10_national_forecast_2026.ipynb` — per-port monthly forecast (Baseline model) |
+| `chile_forecast_2026` | `10_national_forecast_2026.ipynb` — national monthly totals (imports, exports, total) |
+| `port_forecast_2026_hybrid` | `11_hybrid_ensemble.ipynb` — per-port monthly forecast (hybrid: Baseline + ML) |
+| `port_model_selection` | `11_hybrid_ensemble.ipynb` — which model was selected for each port-direction |
 
 ---
 

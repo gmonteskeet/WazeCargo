@@ -318,9 +318,9 @@ fit_fn, predict_fn = build_winner_callbacks(WINNER)
 print(f"Winner callbacks bound for: {WINNER}")
 """))
 
-cells.append(("md", r"""## 8.8  2026 forecast for the top-15 ports"""))
+cells.append(("md", r"""## 8.8  2026 forecast for all eligible ports"""))
 
-cells.append(("code", r"""eligible = U.list_eligible_ports(df_panel).head(15)
+cells.append(("code", r"""eligible = U.list_eligible_ports(df_panel)
 print(f"Forecasting {len(eligible)} port-direction pairs ...")
 
 import time

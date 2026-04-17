@@ -30,7 +30,7 @@ OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 COVID_YEARS      = {2020, 2021, 2022}
-INCOMPLETE_YEARS = {2024}
+INCOMPLETE_YEARS = set()
 CLEAN_YEARS      = set(range(2005, 2026)) - COVID_YEARS - INCOMPLETE_YEARS
 S = "waze_cargo"
 

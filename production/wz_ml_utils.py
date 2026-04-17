@@ -28,15 +28,16 @@ METRICS_DIR = DATA_DIR / "metrics"
 METRICS_DIR.mkdir(parents=True, exist_ok=True)
 
 COVID_YEARS      = {2020, 2021, 2022}
-INCOMPLETE_YEARS = {2024}
+INCOMPLETE_YEARS = set()
 CLEAN_YEARS      = set(range(2005, 2026)) - COVID_YEARS - INCOMPLETE_YEARS
 
-YEAR_WEIGHTS = {2020: 0.1, 2021: 0.2, 2022: 0.4, 2024: 0.0}
+YEAR_WEIGHTS = {2020: 0.1, 2021: 0.2, 2022: 0.4}
 
 CV_FOLDS = [
     (2018, 2019),     # pre-COVID
     (2019, 2023),     # post-COVID
-    (2023, 2025),     # most recent clean
+    (2023, 2024),     # recovery year
+    (2024, 2025),     # most recent
 ]
 
 TARGET = "shipment_count"
@@ -107,8 +108,11 @@ def get_port_panel(df: pd.DataFrame, port: str, direction: str) -> pd.DataFrame:
 
 
 def list_eligible_ports(df: pd.DataFrame, min_months: int = 36) -> pd.DataFrame:
-    g = df.groupby(["port", "direction"]).size().rename("n").reset_index()
-    return g[g["n"] >= min_months].sort_values("n", ascending=False).reset_index(drop=True)
+    g = df.groupby(["port", "direction"]).agg(
+        n=("shipment_count", "size"),
+        avg_volume=("shipment_count", "mean"),
+    ).reset_index()
+    return g[g["n"] >= min_months].sort_values("avg_volume", ascending=False).reset_index(drop=True)
 
 
 # ── FEATURES ──────────────────────────────────────────────────────
@@ -251,7 +255,7 @@ def forecast_2026(df_port: pd.DataFrame,
     fit_fn(df_train, features) -> trained_model
     predict_fn(model, df_row, features) -> float
     """
-    df_all = df_port[df_port["year"] != 2024].copy()
+    df_all = df_port.copy()
     df_tr  = df_all[df_all["year"] <= 2025].copy()
 
     sel = select_features(df_tr, feature_cols)
