@@ -220,7 +220,49 @@ plt.show()
 fc[["year","month","pred_shipment_count"]]
 """))
 
-cells.append(("md", r"""## 5.7  Take-aways
+cells.append(("md", r"""## 5.7  2026 forecast — top-8 ports by volume"""))
+
+cells.append(("code", r"""top8_volume = (df_panel.groupby(["port","direction"])[U.TARGET]
+                       .mean().sort_values(ascending=False).head(8)
+                       .reset_index())
+top8_keys = list(zip(top8_volume["port"], top8_volume["direction"]))
+
+import time as _time
+_t0 = _time.time()
+all_fc = []
+for port, direction in top8_keys:
+    _dp = U.get_port_panel(df_panel, port, direction)
+    _fc = U.forecast_2026(_dp, rf_fit_only, rf_predict_one)
+    if len(_fc):
+        _fc["port"] = port; _fc["direction"] = direction
+        all_fc.append(_fc)
+fc_top8 = pd.concat(all_fc, ignore_index=True) if all_fc else pd.DataFrame()
+print(f"Forecasted {len(top8_keys)} port-direction pairs in {_time.time()-_t0:.1f}s")
+
+fig, axes = plt.subplots(4, 2, figsize=(14, 14), sharex=True)
+for ax, (port, direction) in zip(axes.flatten(), top8_keys):
+    _dp = U.get_port_panel(df_panel, port, direction)
+    hist = _dp[_dp["year"].between(2019, 2025)]
+    hist_d = pd.to_datetime(hist[["year","month"]].assign(day=1))
+    ax.plot(hist_d, hist[U.TARGET], color="#1f77b4", lw=1.3, label="Actual")
+
+    sub = fc_top8[(fc_top8["port"] == port) & (fc_top8["direction"] == direction)]
+    if len(sub):
+        d2 = pd.to_datetime(sub[["year","month"]].assign(day=1))
+        ax.plot(d2, sub["pred_shipment_count"], "o-",
+                color="#8c564b", lw=1.6, markersize=5, label="Random Forest 2026")
+    ax.set_title(f"{port} ({direction})", fontsize=10)
+    ax.set_ylabel("Ships / mo", fontsize=9)
+    ax.tick_params(axis="x", labelsize=8)
+    ax.legend(fontsize=7, loc="upper left")
+plt.suptitle("2026 forecast — top-8 ports by volume  (model = random_forest)",
+             fontsize=13, fontweight="bold", y=1.005)
+plt.tight_layout()
+plt.savefig(FIG_DIR / "54_rf_top8_2026.png")
+plt.show()
+"""))
+
+cells.append(("md", r"""## 5.8  Take-aways
 
 1. Random Forest's MDI importance is **biased toward continuous
    high-cardinality features** like the lag columns. The gain importance

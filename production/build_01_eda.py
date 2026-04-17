@@ -75,6 +75,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seaborn as sns
+import wz_ml_utils as U
 
 warnings.filterwarnings("ignore")
 sns.set_theme(style="whitegrid", context="notebook", palette="deep")
@@ -87,7 +88,7 @@ plt.rcParams.update({
     "savefig.bbox":   "tight",
 })
 
-DATA_DIR = Path("data")
+DATA_DIR = U.DATA_DIR
 FIG_DIR  = Path("figures"); FIG_DIR.mkdir(exist_ok=True)
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
@@ -102,7 +103,7 @@ that mirror the production PostgreSQL tables:
 
 | File | Rows | Description |
 |------|------|-------------|
-| `port_monthly_agg.parquet`      | 22 144 | Raw monthly aggregates per port × direction × aduana |
+| `port_monthly_agg.parquet`      | ~3 500 | Raw monthly aggregates per port × direction |
 | `port_features_indexed.parquet` | 21 013 | + lag, rolling, COVID flags, normalised congestion components |
 
 `port_features_indexed` already drops the rows where `lag_1` or `lag_12` is
@@ -143,7 +144,7 @@ The 55 columns of `port_features_indexed` fall into **eight functional groups**:
 
 | Group | Columns | Role in modelling |
 |-------|---------|-------------------|
-| **Identifiers** | `port`, `direction`, `aduana`, `year`, `month` | Panel keys, never features |
+| **Identifiers** | `port`, `direction`, `year`, `month` | Panel keys, never features |
 | **Targets / aggregates** | `shipment_count`, `total_value_usd`, `total_weight_mt`, `total_quantity` | `shipment_count` is the supervised target |
 | **Diversity** | `commodity_diversity`, `hs4_diversity`, `country_diversity`, `continent_diversity` | Proxy for cargo mix complexity |
 | **Cargo mix** | `pct_general`, `pct_bulk`, `pct_refrigerated`, `pct_container` | Composition; sums to ≈ 1 |

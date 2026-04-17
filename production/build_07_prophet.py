@@ -250,7 +250,64 @@ plt.show()
 fc26_2026[["ds","yhat","yhat_lower","yhat_upper"]]
 """))
 
-cells.append(("md", r"""## 7.8  Take-aways
+cells.append(("md", r"""## 7.8  2026 forecast — top-8 ports by volume"""))
+
+cells.append(("code", r"""top8_volume = (df_panel.groupby(["port","direction"])[U.TARGET]
+                       .mean().sort_values(ascending=False).head(8)
+                       .reset_index())
+top8_keys = list(zip(top8_volume["port"], top8_volume["direction"]))
+
+import time as _time
+_t0 = _time.time()
+all_fc = []
+for port, direction in top8_keys:
+    _dp = U.get_port_panel(df_panel, port, direction)
+    _tr = _dp[(~_dp["year"].isin(U.COVID_YEARS)) & (_dp["year"] <= 2025)].copy()
+    ts = _tr[["year","month",U.TARGET]].copy()
+    ts["ds"] = pd.to_datetime(ts[["year","month"]].assign(day=1))
+    ts["y"]  = ts[U.TARGET].astype(float)
+    ts = ts[["ds","y"]].sort_values("ds")
+    if len(ts) < 24:
+        continue
+    _min_ds, _max_ds = ts["ds"].min(), ts["ds"].max()
+    _valid_cp = [c for c in COVID_CHANGEPOINTS if pd.Timestamp(c) >= _min_ds and pd.Timestamp(c) <= _max_ds]
+    _m = Prophet(**PROPHET_PARAMS, **({"changepoints": _valid_cp} if _valid_cp else {}))
+    _m.fit(ts)
+    _fut = _m.make_future_dataframe(periods=12, freq="MS")
+    _pred = _m.predict(_fut)
+    _p26 = _pred[_pred["ds"].dt.year == 2026][["ds","yhat"]].copy()
+    _p26["year"]  = _p26["ds"].dt.year
+    _p26["month"] = _p26["ds"].dt.month
+    _p26["pred_shipment_count"] = np.maximum(1.0, _p26["yhat"])
+    _p26["port"] = port; _p26["direction"] = direction
+    all_fc.append(_p26)
+fc_top8 = pd.concat(all_fc, ignore_index=True) if all_fc else pd.DataFrame()
+print(f"Forecasted {len(top8_keys)} port-direction pairs in {_time.time()-_t0:.1f}s")
+
+fig, axes = plt.subplots(4, 2, figsize=(14, 14), sharex=True)
+for ax, (port, direction) in zip(axes.flatten(), top8_keys):
+    _dp = U.get_port_panel(df_panel, port, direction)
+    hist = _dp[_dp["year"].between(2019, 2025)]
+    hist_d = pd.to_datetime(hist[["year","month"]].assign(day=1))
+    ax.plot(hist_d, hist[U.TARGET], color="#1f77b4", lw=1.3, label="Actual")
+
+    sub = fc_top8[(fc_top8["port"] == port) & (fc_top8["direction"] == direction)]
+    if len(sub):
+        d2 = pd.to_datetime(sub[["year","month"]].assign(day=1))
+        ax.plot(d2, sub["pred_shipment_count"], "o-",
+                color="#e377c2", lw=1.6, markersize=5, label="Prophet 2026")
+    ax.set_title(f"{port} ({direction})", fontsize=10)
+    ax.set_ylabel("Ships / mo", fontsize=9)
+    ax.tick_params(axis="x", labelsize=8)
+    ax.legend(fontsize=7, loc="upper left")
+plt.suptitle("2026 forecast — top-8 ports by volume  (model = prophet)",
+             fontsize=13, fontweight="bold", y=1.005)
+plt.tight_layout()
+plt.savefig(FIG_DIR / "74_prophet_top8_2026.png")
+plt.show()
+"""))
+
+cells.append(("md", r"""## 7.9  Take-aways
 
 1. Prophet's only inputs are date and target value. The fact that it
    gets within striking distance of LightGBM (visible in notebook 08)

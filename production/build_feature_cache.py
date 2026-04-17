@@ -67,7 +67,6 @@ SELECT
     i.mes                                            AS month,
     i.puerto_desembarque                             AS port,
     'import'                                         AS direction,
-    i.aduana,
     COUNT(*)                                         AS shipment_count,
     COALESCE(SUM(i.cif_us), 0)                       AS total_value_usd,
     NULL::DOUBLE PRECISION                           AS total_weight_mt,
@@ -88,7 +87,7 @@ SELECT
 FROM {S}.clean_maritime_imports i
 WHERE i.puerto_desembarque IS NOT NULL
   AND i.periodo BETWEEN 2005 AND 2025
-GROUP BY i.puerto_desembarque, i.periodo, i.mes, i.aduana
+GROUP BY i.puerto_desembarque, i.periodo, i.mes
 
 UNION ALL
 
@@ -97,7 +96,6 @@ SELECT
     e.mes                                            AS month,
     e.puerto_embarque                                AS port,
     'export'                                         AS direction,
-    e.aduana,
     COUNT(*)                                         AS shipment_count,
     COALESCE(SUM(e.fob_us), 0)                       AS total_value_usd,
     COALESCE(SUM(e.peso_bruto_kg) / 1000.0, 0)       AS total_weight_mt,
@@ -118,7 +116,7 @@ SELECT
 FROM {S}.clean_maritime_exports e
 WHERE e.puerto_embarque IS NOT NULL
   AND e.periodo BETWEEN 2005 AND 2025
-GROUP BY e.puerto_embarque, e.periodo, e.mes, e.aduana
+GROUP BY e.puerto_embarque, e.periodo, e.mes
 """
 
 with engine.connect() as conn:

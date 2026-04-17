@@ -374,7 +374,273 @@ plt.savefig(FIG_DIR / "83_top8_2026_forecast.png")
 plt.show()
 """))
 
-cells.append(("md", r"""## 8.10  Final ranking summary table"""))
+cells.append(("md", r"""## 8.10  Chile-wide maritime trade overview — all models 2026
+
+This chart aggregates **every port** into a single national total for
+imports and exports, then overlays the 2026 forecast from each model.
+It answers the big-picture question: *"What does each model think Chilean
+maritime trade will look like in 2026?"*"""))
+
+cells.append(("code", r"""# ── 1. Historical national totals (2005–2025) ────────────────────
+agg = pd.read_parquet(U.DATA_DIR / "port_monthly_agg.parquet")
+national = (agg.groupby(["year","month","direction"])["shipment_count"]
+               .sum().reset_index())
+national["date"] = pd.to_datetime(national[["year","month"]].assign(day=1))
+
+# Annual totals for bar chart
+annual = (national.groupby(["year","direction"])["shipment_count"]
+                  .sum().reset_index())
+"""))
+
+cells.append(("code", r"""# ── 2. Generate 2026 forecasts from every model ──────────────────
+import lightgbm as lgb
+import xgboost as xgb_lib
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import RidgeCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from prophet import Prophet
+import pickle, time
+
+LGBM_PARAMS2 = dict(objective="regression", metric="rmse", learning_rate=0.05,
+                    num_leaves=31, min_child_samples=10, feature_fraction=0.8,
+                    bagging_fraction=0.8, bagging_freq=5, verbose=-1, n_jobs=-1)
+XGB_PARAMS2  = dict(n_estimators=500, learning_rate=0.05, max_depth=5,
+                    subsample=0.8, colsample_bytree=0.8,
+                    early_stopping_rounds=50, eval_metric="rmse",
+                    verbosity=0, n_jobs=-1)
+RF_PARAMS2   = dict(n_estimators=400, max_depth=None, min_samples_leaf=2,
+                    max_features="sqrt", bootstrap=True, n_jobs=-1, random_state=42)
+PROPHET_PARAMS2 = dict(yearly_seasonality=True, weekly_seasonality=False,
+                       daily_seasonality=False, seasonality_mode="multiplicative",
+                       changepoint_prior_scale=0.05)
+COVID_CP = ["2020-03-01", "2020-12-01", "2021-06-01", "2022-09-01"]
+
+def _baseline_fit(df_train, features):
+    return "baseline"
+def _baseline_pred(model, df_row, features):
+    lag12  = float(df_row["lag_12_clean"].iloc[0]) if "lag_12_clean" in df_row else float(df_row["lag_12"].iloc[0])
+    growth = float(df_row.get("yoy_growth_clean", pd.Series([0])).iloc[0])
+    growth = max(-0.20, min(0.20, growth))
+    return max(1.0, lag12 * (1 + growth))
+
+def _lgbm_fit(df_train, features):
+    df_tr = df_train[df_train["year"] < 2025].copy()
+    df_vl = df_train[df_train["year"] == 2025].copy()
+    if len(df_vl) == 0: df_vl = df_tr.tail(12).copy()
+    Xtr = df_tr[features].fillna(0).astype(float)
+    ytr = df_tr[U.TARGET].astype(float).values
+    wtr = U.get_sample_weights(df_tr)
+    Xv  = df_vl[features].fillna(0).astype(float)
+    yv  = df_vl[U.TARGET].astype(float).values
+    d  = lgb.Dataset(Xtr, label=ytr, weight=wtr)
+    dv = lgb.Dataset(Xv, label=yv, reference=d)
+    return lgb.train(LGBM_PARAMS2, d, num_boost_round=500, valid_sets=[dv],
+                     callbacks=[lgb.early_stopping(50, verbose=False), lgb.log_evaluation(-1)])
+def _lgbm_pred(model, df_row, features):
+    return float(model.predict(df_row[features].fillna(0).astype(float))[0])
+
+def _xgb_fit(df_train, features):
+    df_tr = df_train[df_train["year"] < 2025].copy()
+    df_vl = df_train[df_train["year"] == 2025].copy()
+    if len(df_vl) == 0: df_vl = df_tr.tail(12).copy()
+    Xtr = df_tr[features].fillna(0).astype(float)
+    ytr = df_tr[U.TARGET].astype(float).values
+    wtr = U.get_sample_weights(df_tr)
+    Xv  = df_vl[features].fillna(0).astype(float)
+    yv  = df_vl[U.TARGET].astype(float).values
+    m = xgb_lib.XGBRegressor(**XGB_PARAMS2)
+    m.fit(Xtr, ytr, sample_weight=wtr, eval_set=[(Xv, yv)], verbose=False)
+    return m
+def _xgb_pred(model, df_row, features):
+    return float(model.predict(df_row[features].fillna(0).astype(float))[0])
+
+def _rf_fit(df_train, features):
+    df_tr = df_train[(df_train["year"] < 2026) & (~df_train["year"].isin(U.COVID_YEARS))]
+    Xtr = df_tr[features].fillna(0).astype(float)
+    ytr = df_tr[U.TARGET].astype(float).values
+    m = RandomForestRegressor(**RF_PARAMS2); m.fit(Xtr, ytr); return m
+def _rf_pred(model, df_row, features):
+    return float(model.predict(df_row[features].fillna(0).astype(float))[0])
+
+def _ridge_fit(df_train, features):
+    df_tr = df_train[(df_train["year"] < 2026) & (~df_train["year"].isin(U.COVID_YEARS))]
+    Xtr = df_tr[features].fillna(0).astype(float).values
+    ytr = df_tr[U.TARGET].astype(float).values
+    p = Pipeline([("scale", StandardScaler()), ("model", RidgeCV(alphas=[0.01,0.1,1,10,100]))])
+    p.fit(Xtr, ytr); return p
+def _ridge_pred(model, df_row, features):
+    return float(model.predict(df_row[features].fillna(0).astype(float).values)[0])
+
+model_callbacks = {
+    "Baseline":      (_baseline_fit, _baseline_pred),
+    "LightGBM":      (_lgbm_fit,     _lgbm_pred),
+    "XGBoost":       (_xgb_fit,      _xgb_pred),
+    "Random Forest": (_rf_fit,       _rf_pred),
+    "Ridge":         (_ridge_fit,    _ridge_pred),
+}
+
+eligible = U.list_eligible_ports(df_panel)
+print(f"Forecasting 2026 for {len(eligible)} port-direction pairs across {len(model_callbacks)+1} models ...")
+t0 = time.time()
+
+all_model_fc = {}
+for mname, (fit_fn, pred_fn) in model_callbacks.items():
+    fc_rows = []
+    for _, p in eligible.iterrows():
+        dp = U.get_port_panel(df_panel, p["port"], p["direction"])
+        fc = U.forecast_2026(dp, fit_fn, pred_fn)
+        if len(fc):
+            fc["port"] = p["port"]; fc["direction"] = p["direction"]
+            fc_rows.append(fc)
+    all_model_fc[mname] = pd.concat(fc_rows, ignore_index=True) if fc_rows else pd.DataFrame()
+    print(f"  {mname}: {len(all_model_fc[mname])} rows")
+
+# Prophet (different API)
+fc_rows = []
+for _, p in eligible.iterrows():
+    dp = U.get_port_panel(df_panel, p["port"], p["direction"])
+    tr = dp[(~dp["year"].isin(U.COVID_YEARS)) & (dp["year"] <= 2025)].copy()
+    ts = tr[["year","month",U.TARGET]].copy()
+    ts["ds"] = pd.to_datetime(ts[["year","month"]].assign(day=1))
+    ts["y"]  = ts[U.TARGET].astype(float)
+    ts = ts[["ds","y"]].sort_values("ds")
+    if len(ts) < 24:
+        continue
+    min_ds, max_ds = ts["ds"].min(), ts["ds"].max()
+    valid_cp = [c for c in COVID_CP if pd.Timestamp(c) >= min_ds and pd.Timestamp(c) <= max_ds]
+    _m = Prophet(**PROPHET_PARAMS2, **({"changepoints": valid_cp} if valid_cp else {}))
+    _m.fit(ts)
+    _fut = _m.make_future_dataframe(periods=12, freq="MS")
+    _pred = _m.predict(_fut)
+    _p26 = _pred[_pred["ds"].dt.year == 2026][["ds"]].copy()
+    _p26["year"]  = _p26["ds"].dt.year
+    _p26["month"] = _p26["ds"].dt.month
+    _p26["pred_shipment_count"] = np.maximum(1.0, _pred[_pred["ds"].dt.year == 2026]["yhat"].values)
+    _p26["port"] = p["port"]; _p26["direction"] = p["direction"]
+    fc_rows.append(_p26)
+all_model_fc["Prophet"] = pd.concat(fc_rows, ignore_index=True) if fc_rows else pd.DataFrame()
+print(f"  Prophet: {len(all_model_fc['Prophet'])} rows")
+print(f"Done in {time.time()-t0:.1f}s")
+
+# Save for reuse
+with open(U.DATA_DIR / "all_model_forecasts.pkl", "wb") as f:
+    pickle.dump(all_model_fc, f)
+"""))
+
+cells.append(("code", r"""# ── 3. Build Chile-wide overview chart ───────────────────────────
+MODEL_PALETTE = {
+    "Baseline":      "#1f77b4",
+    "LightGBM":      "#2ca02c",
+    "XGBoost":       "#ff7f0e",
+    "Random Forest": "#8c564b",
+    "Ridge":         "#17becf",
+    "Prophet":       "#e377c2",
+}
+MODEL_MARKERS = {
+    "Baseline": "s", "LightGBM": "D", "XGBoost": "^",
+    "Random Forest": "p", "Ridge": "v", "Prophet": "X",
+}
+
+fig = plt.figure(figsize=(18, 14))
+gs = fig.add_gridspec(2, 2, width_ratios=[3.5, 1], wspace=0.08, hspace=0.28)
+
+for row, dir_name, title_short in [(0, "import", "Imports"), (1, "export", "Exports")]:
+    ax_main = fig.add_subplot(gs[row, 0])
+    ax_zoom = fig.add_subplot(gs[row, 1])
+
+    hist_month = national[national["direction"] == dir_name].sort_values("date")
+
+    # ── Main panel: full history 2005-2026 ──
+    ax_main.fill_between(hist_month["date"], 0, hist_month["shipment_count"],
+                         color="#d4e6f1", alpha=0.5, zorder=1)
+    ax_main.plot(hist_month["date"], hist_month["shipment_count"],
+                 color="#2c3e50", lw=1.0, alpha=0.7, zorder=2, label="Monthly actual")
+
+    for y in [2020, 2021, 2022]:
+        ax_main.axvspan(pd.Timestamp(y,1,1), pd.Timestamp(y,12,31),
+                        color="#e74c3c", alpha=0.06, zorder=0)
+
+    for mname, fc_df in all_model_fc.items():
+        sub = fc_df[fc_df["direction"] == dir_name]
+        if sub.empty:
+            continue
+        mt = (sub.groupby(["year","month"])["pred_shipment_count"]
+                 .sum().reset_index())
+        mt["date"] = pd.to_datetime(mt[["year","month"]].assign(day=1))
+        mt = mt.sort_values("date")
+        c = MODEL_PALETTE.get(mname, "#666")
+        mk = MODEL_MARKERS.get(mname, "o")
+        ax_main.plot(mt["date"], mt["pred_shipment_count"],
+                     marker=mk, color=c, lw=2.2, markersize=5, alpha=0.9,
+                     label=mname, zorder=5)
+
+    ax_main.axvline(pd.Timestamp("2026-01-01"), color="#2c3e50", ls="--", lw=1.2, alpha=0.6)
+    ymax = ax_main.get_ylim()[1]
+    ax_main.annotate("FORECAST", xy=(pd.Timestamp("2026-01-01"), ymax*0.97),
+                     fontsize=8, fontweight="bold", alpha=0.5, ha="left")
+    ax_main.set_title(f"CHILE — Total Maritime {title_short} (all ports)",
+                      fontsize=12, fontweight="bold")
+    ax_main.set_ylabel("Shipments / month", fontsize=10)
+    ax_main.legend(loc="upper left", fontsize=7.5, ncol=2, framealpha=0.92)
+    ax_main.grid(True, alpha=0.2)
+    ax_main.set_xlim(pd.Timestamp("2005-01-01"), pd.Timestamp("2027-02-01"))
+
+    # ── Zoom panel: 2024-2026 detail ──
+    zoom_hist = hist_month[hist_month["date"] >= pd.Timestamp("2024-01-01")]
+    ax_zoom.plot(zoom_hist["date"], zoom_hist["shipment_count"],
+                 color="#2c3e50", lw=1.5, alpha=0.7, label="Actual")
+    ax_zoom.fill_between(zoom_hist["date"], 0, zoom_hist["shipment_count"],
+                         color="#d4e6f1", alpha=0.4)
+
+    for mname, fc_df in all_model_fc.items():
+        sub = fc_df[fc_df["direction"] == dir_name]
+        if sub.empty:
+            continue
+        mt = (sub.groupby(["year","month"])["pred_shipment_count"]
+                 .sum().reset_index())
+        mt["date"] = pd.to_datetime(mt[["year","month"]].assign(day=1))
+        mt = mt.sort_values("date")
+        c = MODEL_PALETTE.get(mname, "#666")
+        mk = MODEL_MARKERS.get(mname, "o")
+        ax_zoom.plot(mt["date"], mt["pred_shipment_count"],
+                     marker=mk, color=c, lw=2.0, markersize=6, alpha=0.9, zorder=5)
+
+    ax_zoom.axvline(pd.Timestamp("2026-01-01"), color="#2c3e50", ls="--", lw=1.2, alpha=0.6)
+    ax_zoom.set_title(f"Zoom: 2024–2026", fontsize=10, fontweight="bold")
+    ax_zoom.set_xlim(pd.Timestamp("2024-01-01"), pd.Timestamp("2027-01-01"))
+    ax_zoom.grid(True, alpha=0.2)
+    ax_zoom.tick_params(axis="y", labelsize=8)
+    ax_zoom.tick_params(axis="x", labelsize=7, rotation=30)
+    ax_zoom.yaxis.tick_right()
+
+plt.suptitle("Chilean Maritime Trade 2005–2026\nHistorical volumes + 2026 forecasts from 6 models",
+             fontsize=14, fontweight="bold", y=1.01)
+plt.savefig(FIG_DIR / "84_chile_overview_all_models.png", bbox_inches="tight", dpi=130)
+plt.show()
+"""))
+
+cells.append(("code", r"""# ── 4. Annual summary table: 2026 predicted totals per model ─────
+print("2026 Annual Forecast Summary — Total Chile Shipments\n")
+print(f"{'Model':<20} {'Imports':>12} {'Exports':>12} {'Total':>12}")
+print("─" * 58)
+for mname in MODEL_PALETTE:
+    fc_df = all_model_fc.get(mname, pd.DataFrame())
+    if fc_df.empty:
+        continue
+    imp = fc_df[fc_df["direction"]=="import"]["pred_shipment_count"].sum()
+    exp = fc_df[fc_df["direction"]=="export"]["pred_shipment_count"].sum()
+    print(f"{mname:<20} {imp:>12,.0f} {exp:>12,.0f} {imp+exp:>12,.0f}")
+
+# Last actual year for comparison
+last_actual = agg[agg["year"]==2025]
+imp_act = last_actual[last_actual["direction"]=="import"]["shipment_count"].sum()
+exp_act = last_actual[last_actual["direction"]=="export"]["shipment_count"].sum()
+print("─" * 58)
+print(f"{'Actual 2025':<20} {imp_act:>12,.0f} {exp_act:>12,.0f} {imp_act+exp_act:>12,.0f}")
+"""))
+
+cells.append(("md", r"""## 8.11  Final ranking summary table"""))
 
 cells.append(("code", r"""# Re-shape into the publication table
 def _fmt(x, k):
@@ -392,7 +658,7 @@ for model in last["model"]:
 pd.DataFrame(table)
 """))
 
-cells.append(("md", r"""## 8.11  Take-aways for the thesis defence
+cells.append(("md", r"""## 8.12  Take-aways for the thesis defence
 
 1. **Volume-weighted MAPE on fold 2025** is the headline metric. The
    ranking is reproducible and identical to the production benchmark

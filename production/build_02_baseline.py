@@ -291,7 +291,49 @@ plt.show()
 fc[["year","month","pred_shipment_count"]]
 """))
 
-cells.append(("md", r"""## 2.11  Take-aways for the comparison notebook
+cells.append(("md", r"""## 2.11  2026 forecast — top-8 ports by volume"""))
+
+cells.append(("code", r"""top8_volume = (df_panel.groupby(["port","direction"])[U.TARGET]
+                       .mean().sort_values(ascending=False).head(8)
+                       .reset_index())
+top8_keys = list(zip(top8_volume["port"], top8_volume["direction"]))
+
+import time as _time
+_t0 = _time.time()
+all_fc = []
+for port, direction in top8_keys:
+    _dp = U.get_port_panel(df_panel, port, direction)
+    _fc = U.forecast_2026(_dp, baseline_fit_only, baseline_predict_only)
+    if len(_fc):
+        _fc["port"] = port; _fc["direction"] = direction
+        all_fc.append(_fc)
+fc_top8 = pd.concat(all_fc, ignore_index=True) if all_fc else pd.DataFrame()
+print(f"Forecasted {len(top8_keys)} port-direction pairs in {_time.time()-_t0:.1f}s")
+
+fig, axes = plt.subplots(4, 2, figsize=(14, 14), sharex=True)
+for ax, (port, direction) in zip(axes.flatten(), top8_keys):
+    _dp = U.get_port_panel(df_panel, port, direction)
+    hist = _dp[_dp["year"].between(2019, 2025)]
+    hist_d = pd.to_datetime(hist[["year","month"]].assign(day=1))
+    ax.plot(hist_d, hist[U.TARGET], color="#1f77b4", lw=1.3, label="Actual")
+
+    sub = fc_top8[(fc_top8["port"] == port) & (fc_top8["direction"] == direction)]
+    if len(sub):
+        d2 = pd.to_datetime(sub[["year","month"]].assign(day=1))
+        ax.plot(d2, sub["pred_shipment_count"], "o-",
+                color="#1f77b4", lw=1.6, markersize=5, label="Baseline 2026")
+    ax.set_title(f"{port} ({direction})", fontsize=10)
+    ax.set_ylabel("Ships / mo", fontsize=9)
+    ax.tick_params(axis="x", labelsize=8)
+    ax.legend(fontsize=7, loc="upper left")
+plt.suptitle("2026 forecast — top-8 ports by volume  (model = baseline_seasonal_naive)",
+             fontsize=13, fontweight="bold", y=1.005)
+plt.tight_layout()
+plt.savefig(FIG_DIR / "25_baseline_top8_2026.png")
+plt.show()
+"""))
+
+cells.append(("md", r"""## 2.12  Take-aways for the comparison notebook
 
 1. The baseline is **already very strong** for the largest ports — it
    exploits the only signal that matters at that scale (annual seasonality).

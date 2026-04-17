@@ -12,6 +12,8 @@ __pycache__/
 *.ddb
 *.joblib
 *.pkl
+*.parquet
+notebooks/eda/data/
 
 # IDE
 .vscode/
