@@ -1,0 +1,37 @@
+# ══════════════════════════════════════════════════════════════
+# WAZE CARGO — Python dependencies
+# Python 3.13+ compatible
+#
+# Install:
+#   python3 -m venv venv
+#   source venv/bin/activate
+#   pip install -r requirements.txt
+# ══════════════════════════════════════════════════════════════
+
+# ── Database ──────────────────────────────────────────────────
+duckdb>=1.1.0                  # local DuckDB reads (02_duckdb_to_rds.py)
+psycopg2-binary>=2.9.9         # PostgreSQL / AWS RDS driver
+sqlalchemy>=2.0.36             # ORM + connection pooling
+
+# ── Data processing ───────────────────────────────────────────
+pandas>=2.2.0                  # dataframes, all scripts
+numpy>=1.26.0                  # numerical ops, ML pipeline
+openpyxl>=3.1.0                # read tablas_de_codigos.xlsx (02_etl_to_rds.py)
+
+# ── Progress bars ─────────────────────────────────────────────
+tqdm>=4.66.0                   # progress bars in migration scripts
+
+# ── ML — gradient boosting ────────────────────────────────────
+lightgbm>=4.3.0                # primary ML model (05_ml_train_evaluate.py)
+xgboost>=2.0.0                 # secondary ML model
+
+# ── ML — time series ─────────────────────────────────────────
+prophet>=1.1.5                 # Facebook Prophet (COVID changepoints)
+
+# ── ML — utilities ────────────────────────────────────────────
+scikit-learn>=1.4.0            # metrics: MAE, RMSE, R², feature selection
+shap>=0.45.0                   # SHAP feature importance explainability
+
+# ── Prophet dependencies (installed automatically but pinned) ─
+holidays>=0.46                 # required by Prophet
+pystan>=3.9.0                  # required by Prophet (Stan backend)

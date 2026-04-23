@@ -1,0 +1,40 @@
+# Environment
+.env
+venv/
+.venv/
+env/
+.jupvenv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data files (large)
+*.ddb
+*.joblib
+*.pkl
+*.parquet
+notebooks/eda/data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# setup
+*.sh

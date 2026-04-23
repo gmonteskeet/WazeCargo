@@ -1,0 +1,39 @@
+name: Scrape Port Data
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'  # Every 4 hours
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Run VesselFinder port scraper
+        run: python scrapers/ports/vesselfinder_ports.py
+        continue-on-error: true
+      
+      # Add more scrapers as you build them:
+      # - name: Run DIRECTEMAR scraper
+      #   run: python scrapers/ports/directemar_ports.py
+      #   continue-on-error: true
+      
+      - name: Commit new data
+        run: |
+          git config --local user.email "bot@wazecargo.com"
+          git config --local user.name "WazeCargo Bot"
+          git add data/
+          git commit -m "🤖 Scrape $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes to commit"
+          git push

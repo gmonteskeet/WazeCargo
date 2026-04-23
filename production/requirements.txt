@@ -1,0 +1,14 @@
+numpy
+pandas
+pyarrow
+matplotlib
+seaborn
+statsmodels
+lightgbm
+xgboost
+scikit-learn
+prophet
+shap
+jupyter
+sqlalchemy
+psycopg2-binary
