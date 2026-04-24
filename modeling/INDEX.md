@@ -9,7 +9,7 @@
 ## Directory Structure
 
 ```
-production/
+modeling/
   03_ml_congestion.py          # RDS congestion pipeline
   03_ml_congestion.sql         # SQL reference version
   04_ml_commodity.py           # RDS commodity pipeline

@@ -97,7 +97,7 @@
 |---|---|---|
 | Local upload | Python + boto3 | Cross-platform, full control, integrates with AWS CLI credentials |
 | Cloud storage | AWS S3 | Scalable, cost-effective, native Glue integration, partitioned by year |
-| EDA / Profiling | AWS DataBrew | Visual profiling, schema inference, data quality statistics |
+| EDA / Profiling | AWS DataBrew (eda_databrew/) | Visual profiling, schema inference, data quality statistics |
 | ETL | AWS Glue (PySpark) | Serverless, scalable, native S3/RDS connectors, handles large files |
 | Data validation | Custom Glue logic | ML-critical column checks, row-level split (valid/invalid) |
 | Alerting | AWS SNS | Real-time notifications on data quality issues |
@@ -495,7 +495,7 @@ WazeCargo/
 | Data Sources | Chilean Customs CSV, VesselFinder | ✅ Active |
 | Local Tools | Python 3.13, boto3, DuckDB | ✅ Active |
 | Cloud Storage | AWS S3 (partitioned by year) | ✅ Active |
-| EDA | AWS DataBrew | ✅ Active |
+| EDA | AWS DataBrew (eda_databrew/) | ✅ Active |
 | ETL | AWS Glue (PySpark) | ✅ Active |
 | Validation | Custom Glue + SNS alerts | ✅ Active |
 | Database | AWS RDS PostgreSQL 15 | ✅ Active |
