@@ -1,0 +1,567 @@
+@startuml WazeCargo_ERD
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam roundcorner 5
+
+title WazeCargo — Entity Relationship Diagram
+caption 35 tables across 5 schemas · AWS RDS PostgreSQL 17.6
+
+' ════════════════════════════════════════════════════════════
+'  COLOR LEGEND
+' ════════════════════════════════════════════════════════════
+
+skinparam package {
+    BackgroundColor<<structured>> #E8F5E9
+    BackgroundColor<<maritime>> #E3F2FD
+    BackgroundColor<<ml>> #FFF3E0
+    BackgroundColor<<waze_cargo>> #F3E5F5
+    BackgroundColor<<wazecargo_dev>> #ECEFF1
+}
+
+' ════════════════════════════════════════════════════════════
+'  STRUCTURED SCHEMA — Raw data + 13 lookup tables
+' ════════════════════════════════════════════════════════════
+
+package "structured" <<structured>> {
+
+    entity "all_imports" as ai {
+        * year : integer
+        --
+        PERIODO : integer
+        MES : integer
+        COD_ADUANA_TRAMITACION : text
+        COD_TIPO_OPERACION : text
+        COD_PAIS_ORIGEN : text
+        COD_PAIS_ADQUISICION : text
+        COD_REGIMEN_IMPORTACION : text
+        COD_PUERTO_EMBARQUE : text
+        COD_PUERTO_DESEMBARQUE : text
+        COD_VIA_TRANSPORTE : text
+        CL_COMPRA : text
+        ITEM_SA : text
+        CIF_US : text
+        AD_VALOREM_US : text
+        MONEDA : text
+        CANTIDAD_MERCANCIA : text
+        COD_UNIDAD_MEDIDA : text
+        TPO_CARGA : text
+    }
+
+    entity "all_exports" as ae {
+        * year : integer
+        --
+        PERIODO : integer
+        MES : integer
+        COD_ADUANA_TRAMITACION : text
+        COD_TIPO_OPERACION : text
+        COD_REGION_ORIGEN : text
+        COD_VIA_TRANSPORTE : text
+        COD_PUERTO_EMBARQUE : text
+        COD_PUERTO_DESEMBARQUE : text
+        COD_PAIS_DESTINO : text
+        COD_MODALIDAD_VENTA : text
+        MONEDA : text
+        CLAUSULA_VENTA : text
+        COD_TIPO_CARGA : text
+        ITEM_SA : text
+        FOB_US_DUSLEG : text
+        FOBUS_AJUSTADO_IVV : text
+        PESO_BRUTO_KG : text
+        CANTIDAD_MERCANCIA : text
+        COD_UNIDAD_MEDIDA : text
+    }
+
+    entity "lkp_aduanas" as la {
+        * cod_aduana_tramitacion : integer <<PK>>
+        --
+        nombre_aduana : text
+    }
+
+    entity "lkp_clausulas" as lc {
+        * cl_compra : integer <<PK>>
+        --
+        nombre_clausula : text
+        sigla_clausula : text
+    }
+
+    entity "lkp_harmonized_system" as lhs {
+        * hscode : text <<PK>>
+        --
+        section : text
+        description : text
+        parent : text
+        level : text
+    }
+
+    entity "lkp_modalidades_venta" as lmv {
+        * cod_modalidad_venta : integer <<PK>>
+        --
+        nombre_modalidad_venta : text
+        descripcion_modalidad_venta : text
+    }
+
+    entity "lkp_moneda" as lmo {
+        * moneda : integer <<PK>>
+        --
+        moneda_1 : text
+        pais_moneda : text
+    }
+
+    entity "lkp_paises" as lpa {
+        * cod_pais : integer <<PK>>
+        --
+        nombre_pais : text
+        nombre_continente : text
+    }
+
+    entity "lkp_puertos" as lpu {
+        * cod_puerto : integer <<PK>>
+        --
+        nombre_puerto : text
+        tipo_puerto : text
+        cod_pais : double precision
+        pais : text
+        zona_geografica : text
+    }
+
+    entity "lkp_regimen_importacion" as lri {
+        * cod_rgimen_importacion : integer <<PK>>
+        --
+        nombre_rgimen_importacion : text
+        sigla_rgimen_importacion : text
+    }
+
+    entity "lkp_regiones" as lrg {
+        * cod_region_origen : integer <<PK>>
+        --
+        nombre_region : text
+    }
+
+    entity "lkp_tipos_carga" as ltc {
+        * cod_tipo_carga : text <<PK>>
+        --
+        nombre_tipo_carga : text
+        descripcion_tipo_carga : text
+    }
+
+    entity "lkp_tipos_operacion" as lto {
+        * cod_tipo_operacion : integer <<PK>>
+        --
+        nombre_tipo_operacion : text
+        nombre_a_consignar : text
+        ingreso_salida : text
+        operacion : text
+    }
+
+    entity "lkp_unidades_medida" as lum {
+        * cod_unidad_medida : integer <<PK>>
+        --
+        unidad_medida : text
+        nombre_unidad_medida : text
+    }
+
+    entity "lkp_vias_transporte" as lvt {
+        * cod_via_transporte : integer <<PK>>
+        --
+        nombre_via_transporte : text
+    }
+}
+
+' Lookup JOINs — imports
+ai }o..|| la : COD_ADUANA
+ai }o..|| lpa : COD_PAIS_ORIGEN
+ai }o..|| lpu : COD_PUERTO_EMBARQUE
+ai }o..|| lpu : COD_PUERTO_DESEMBARQUE
+ai }o..|| lri : COD_REGIMEN
+ai }o..|| lc : CL_COMPRA
+ai }o..|| ltc : TPO_CARGA
+ai }o..|| lvt : COD_VIA_TRANSPORTE
+ai }o..|| lum : COD_UNIDAD_MEDIDA
+ai }o..|| lhs : ITEM_SA
+
+' Lookup JOINs — exports
+ae }o..|| la : COD_ADUANA
+ae }o..|| lpa : COD_PAIS_DESTINO
+ae }o..|| lpu : COD_PUERTO_EMBARQUE
+ae }o..|| lpu : COD_PUERTO_DESEMBARQUE
+ae }o..|| lrg : COD_REGION_ORIGEN
+ae }o..|| lc : CLAUSULA_VENTA
+ae }o..|| ltc : COD_TIPO_CARGA
+ae }o..|| lvt : COD_VIA_TRANSPORTE
+ae }o..|| lum : COD_UNIDAD_MEDIDA
+ae }o..|| lmv : COD_MODALIDAD_VENTA
+ae }o..|| lhs : ITEM_SA
+
+' ════════════════════════════════════════════════════════════
+'  MARITIME SCHEMA — Cleaned, maritime-only
+' ════════════════════════════════════════════════════════════
+
+package "maritime" <<maritime>> {
+
+    entity "clean_maritime_imports" as cmi {
+        periodo : smallint
+        mes : smallint
+        aduana : text
+        regimen_importacion : text
+        sigla_regimen : text
+        pais_origen : text
+        continente_origen : text
+        puerto_embarque : text
+        zona_geo_embarque : text
+        puerto_desembarque : text
+        tipo_carga : text
+        clausula_compra : text
+        sigla_clausula : text
+        item_sa : text
+        hs6_subpartida : text
+        hs4_partida : text
+        hs2_capitulo : text
+        descripcion_producto : text
+        cif_us : double precision
+        cantidad_mercancia : double precision
+        unidad_medida : text
+        sigla_unidad : text
+    }
+
+    entity "clean_maritime_exports" as cme {
+        periodo : smallint
+        mes : smallint
+        aduana : text
+        region_origen : text
+        puerto_embarque : text
+        zona_geo_embarque : text
+        pais_destino : text
+        continente_destino : text
+        puerto_desembarque : text
+        tipo_carga : text
+        clausula_venta : text
+        sigla_clausula : text
+        item_sa : text
+        hs6_subpartida : text
+        hs4_partida : text
+        hs2_capitulo : text
+        descripcion_producto : text
+        fob_us : double precision
+        peso_bruto_kg : double precision
+        cantidad_mercancia : double precision
+        unidad_medida : text
+        sigla_unidad : text
+    }
+}
+
+ai ||--o{ cmi : "03_rebuild\n(maritime only)"
+ae ||--o{ cme : "03_rebuild\n(maritime only)"
+
+' ════════════════════════════════════════════════════════════
+'  ML SCHEMA — Port congestion + Commodity models
+' ════════════════════════════════════════════════════════════
+
+package "ml" <<ml>> {
+
+    entity "port_monthly_agg" as pma {
+        year : integer
+        month : integer
+        port : text
+        direction : text
+        --
+        shipment_count : bigint
+        total_value_usd : double precision
+        total_weight_mt : double precision
+        commodity_diversity : bigint
+        country_diversity : bigint
+        dominant_hs2 : text
+        dominant_cargo_type : text
+        cnt_general : bigint
+        cnt_bulk : bigint
+        cnt_refrigerated : bigint
+        cnt_container : bigint
+        avg_value_per_shipment_usd : double precision
+    }
+
+    entity "port_features_indexed" as pfi {
+        year : integer
+        month : integer
+        port : text
+        direction : text
+        --
+        shipment_count : bigint
+        congestion_index : double precision
+        season : text
+        lag_1..lag_48 : bigint
+        rolling_3_mean : double precision
+        rolling_12_mean : double precision
+        yoy_growth : double precision
+        is_covid_shock : integer
+        sc_norm : bigint
+        v_norm : double precision
+        w_norm : double precision
+        cd_norm : bigint
+    }
+
+    entity "port_cv_metrics" as pcv {
+        port : text
+        direction : text
+        model : text
+        fold_year : bigint
+        --
+        mae : double precision
+        rmse : double precision
+        mape : double precision
+        r2 : double precision
+        n : bigint
+        created_at : timestamptz
+    }
+
+    entity "port_model_selection" as pms {
+        port : text
+        direction : text
+        --
+        avg_volume : double precision
+        selected_model : text
+        best_ml_model : text
+        ml_cv_mape : double precision
+        baseline_cv_mape : double precision
+        final_cv_mape : double precision
+        created_at : timestamptz
+    }
+
+    entity "port_forecast_2026" as pf26 {
+        year : bigint
+        month : bigint
+        port : text
+        direction : text
+        --
+        pred_shipment_count : double precision
+        model : text
+        forecast_shipments : bigint
+        created_at : timestamptz
+    }
+
+    entity "commodity_monthly_agg" as cma {
+        hs2 : text
+        port : text
+        direction : text
+        year : integer
+        month : integer
+        --
+        shipment_count : bigint
+        total_value_usd : double precision
+        total_weight_mt : double precision
+        total_quantity : double precision
+        dominant_description : text
+    }
+
+    entity "commodity_features" as cf {
+        hs2 : text
+        port : text
+        direction : text
+        year : integer
+        month : integer
+        --
+        shipment_count : bigint
+        lag_1..lag_48 : bigint
+        rolling_3_mean : double precision
+        yoy_growth : double precision
+        is_covid_shock : integer
+    }
+
+    entity "commodity_cv_metrics" as ccv {
+        hs2 : text
+        port : text
+        direction : text
+        model : text
+        fold_year : bigint
+        --
+        mae : double precision
+        rmse : double precision
+        mape : double precision
+        r2 : double precision
+        created_at : timestamptz
+    }
+
+    entity "commodity_model_selection" as cms {
+        hs2 : text
+        port : text
+        direction : text
+        --
+        avg_volume : double precision
+        selected_model : text
+        cv_mape : double precision
+        created_at : timestamptz
+    }
+
+    entity "commodity_forecast_2026" as cf26 {
+        year : bigint
+        month : bigint
+        hs2 : text
+        port : text
+        direction : text
+        --
+        pred_shipment_count : double precision
+        model : text
+        commodity_description : text
+        forecast_shipments : bigint
+        created_at : timestamptz
+    }
+}
+
+' Port ML pipeline flow
+cmi ||--o{ pma : aggregates
+cme ||--o{ pma : aggregates
+pma ||--|| pfi : "feature\nengineering"
+pfi ||--o{ pcv : "cross-\nvalidation"
+pcv ||--o{ pms : "best model\nper port"
+pms ||--o{ pf26 : "forecast"
+
+' Commodity ML pipeline flow
+cmi ||--o{ cma : aggregates
+cme ||--o{ cma : aggregates
+cma ||--|| cf : "feature\nengineering"
+cf ||--o{ ccv : "cross-\nvalidation"
+ccv ||--o{ cms : "best model\nper hs2+port"
+cms ||--o{ cf26 : "forecast"
+
+' ════════════════════════════════════════════════════════════
+'  WAZE_CARGO SCHEMA — Weather & Operability
+' ════════════════════════════════════════════════════════════
+
+package "waze_cargo" <<waze_cargo>> {
+
+    entity "port_risk_config" as prc {
+        * port_code : varchar <<PK>>
+        --
+        zone : varchar
+        hs_threshold_m : real
+        hs_closure_m : real
+        swell_sensitivity : real
+        exposure_factor : real
+        wind_threshold_kmh : real
+        wind_closure_kmh : real
+        gusts_threshold_kmh : real
+        gusts_closure_kmh : real
+        notes : text
+    }
+
+    entity "port_weather_hourly" as pwh {
+        * port_code : varchar <<PK>>
+        * ts : timestamp <<PK>>
+        --
+        cod_puerto : integer
+        port_name : varchar
+        zone : varchar
+        year : integer
+        month : smallint
+        day : smallint
+        hour : smallint
+        wave_height_m : real
+        swell_height_m : real
+        wind_speed_kmh : real
+        wind_gusts_kmh : real
+        wave_risk_score : real
+        wind_risk_score : real
+        combined_risk : real
+        operability_index : real
+        risk_label : varchar
+        closure_driver : varchar
+        swell_dominant : boolean
+    }
+
+    entity "port_weather_daily" as pwd {
+        * port_code : varchar <<PK>>
+        * date : date <<PK>>
+        --
+        cod_puerto : integer
+        port_name : varchar
+        zone : varchar
+        year : integer
+        month : smallint
+        day : smallint
+        n_hours : smallint
+        n_closed_hours : smallint
+        n_warning_hours : smallint
+        pct_hours_closed : real
+        avg_operability_index : real
+        is_closure_day : boolean
+    }
+
+    entity "port_weather_monthly" as pwm {
+        * port_code : varchar <<PK>>
+        * year : integer <<PK>>
+        * month : smallint <<PK>>
+        --
+        cod_puerto : integer
+        port_name : varchar
+        zone : varchar
+        n_hours : integer
+        n_closed_hours : integer
+        pct_hours_closed : real
+        avg_operability_index : real
+        max_wave_height_m : real
+        max_swell_height_m : real
+        max_wind_speed_kmh : real
+    }
+
+    entity "port_operability_score" as pos {
+        * id : bigserial <<PK>>
+        --
+        port : text
+        zone : text
+        ts : timestamptz
+        wave_height_m : real
+        swell_height_m : real
+        wind_speed_kmh : real
+        operability_index : real
+        risk_level : smallint
+        risk_label : text
+        closure_driver : text
+        is_forecast : boolean
+        scored_at : timestamptz
+    }
+
+    entity "port_congestion_weather_adjusted" as pcwa {
+        year : integer
+        month : integer
+        port : text
+        direction : text
+        --
+        congestion_index : double precision
+        congestion_index_raw : double precision
+        port_code : text
+        pct_hours_closed : real
+        pct_hours_warning : real
+        adjustment_multiplier : real
+        adjustment_type : text
+        computed_at : timestamptz
+    }
+}
+
+' Weather data flow
+prc ||--o{ pwh : "thresholds"
+pwh ||--o{ pwd : "daily rollup"
+pwd ||--o{ pwm : "monthly rollup"
+pwh ||--o{ pos : "scored"
+
+' Weather adjusts congestion
+pfi ||--o{ pcwa : "congestion\nbase"
+pwm ||--o{ pcwa : "weather\nadjustment"
+
+' Port code to lookup
+pwh }o..|| lpu : cod_puerto
+pwd }o..|| lpu : cod_puerto
+pwm }o..|| lpu : cod_puerto
+
+' ════════════════════════════════════════════════════════════
+'  WAZECARGO_DEV — Dev copies (empty)
+' ════════════════════════════════════════════════════════════
+
+package "wazecargo_dev" <<wazecargo_dev>> {
+    entity "clean_maritime_imports (dev)" as dcmi {
+        same schema as maritime.clean_maritime_imports
+    }
+    entity "clean_maritime_exports (dev)" as dcme {
+        same schema as maritime.clean_maritime_exports
+    }
+}
+
+@enduml
