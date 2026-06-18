@@ -130,9 +130,8 @@ Full ER diagram: [`docs/er_mermaid.md`](docs/er_mermaid.md)
 
 | Layer | Technology |
 |-------|------------|
-| Scraping | Python, BeautifulSoup, Selenium, GitHub Actions |
 | Storage | AWS S3 (raw/staging), RDS PostgreSQL |
-| ETL | AWS Glue (PySpark), boto3 |
+| ETL | AWS Glue (PySpark) |
 | ML | LightGBM, XGBoost, scikit-learn, Prophet |
 | Dashboard | React 19, Leaflet, Recharts |
 | Infrastructure | AWS (S3, Glue, RDS, Secrets Manager) |
@@ -200,15 +199,6 @@ npm start
 | `main` | Production -- stable code |
 | `add-dashboard-2.0` | Dashboard v2: congestion + weather fused port intelligence UI |
 | `feature/dashboard-v2` | Earlier dashboard v2 prototype |
-
-## Team
-
-| Role | Responsibility |
-|------|----------------|
-| Tech Lead | Architecture, ML pipelines, deployment, PR reviews |
-| Junior 1 | DIRECTEMAR scraper, Valparaiso scraper, alert system |
-| Junior 2 | San Antonio scraper, dashboard, training dataset |
-| Junior 3 | VesselFinder scraper, EDA, baseline model |
 
 ## Contributing
 
